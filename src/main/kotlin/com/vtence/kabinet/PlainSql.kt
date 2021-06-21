@@ -2,10 +2,13 @@ package com.vtence.kabinet
 
 import java.sql.Connection
 
-class Query(sql: String) {
-    private val statement: ParametrizedSqlStatement = ParametrizedSqlStatement(sql)
 
-    operator fun set(name: String, value: Any?): Query {
+fun sql(sql: String): PlainSql = PlainSql(sql)
+
+class PlainSql(sql: String) {
+    private val statement = ParametrizedSqlStatement(sql)
+
+    operator fun set(name: String, value: Any?): PlainSql {
         statement[name] = value
         return this
     }
@@ -43,8 +46,4 @@ class Query(sql: String) {
     }
 
     override fun toString(): String = statement.toSql()
-
-    companion object {
-        fun sql(sql: String): Query = Query(sql)
-    }
 }

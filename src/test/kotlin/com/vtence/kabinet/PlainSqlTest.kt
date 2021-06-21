@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
-class QueryingTest {
+class PlainSqlTest {
 
     val database = Database.inMemory()
     val connection = database.openConnection()
@@ -32,7 +32,7 @@ class QueryingTest {
     @Test
     fun `inserting and retrieving a single database row with all columns`() {
         val id = transaction {
-            val bulldog = Query.sql(
+            val bulldog = sql(
                 """
                 INSERT INTO products(number, name, description) 
                 VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')
@@ -42,7 +42,7 @@ class QueryingTest {
         }
         assertThat("id", id, present())
 
-        val products = Query.sql(
+        val products = sql(
             """
                 SELECT * FROM products
                 WHERE number = :number
