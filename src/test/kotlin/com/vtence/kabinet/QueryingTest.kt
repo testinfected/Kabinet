@@ -16,7 +16,8 @@ import kotlin.test.BeforeTest
 class QueryingTest {
 
     val database = Database.inMemory()
-    val connection = database.connect()
+    val connection = database.openConnection()
+    val transaction = JDBCTransactor(connection)
 
     @BeforeTest
     fun prepareDatabase() {
@@ -30,13 +31,15 @@ class QueryingTest {
 
     @Test
     fun `inserting and retrieving a single database row with all columns`() {
-        val bulldog = Query.sql(
-            """
+        val id = transaction {
+            val bulldog = Query.sql(
+                """
                 INSERT INTO products(number, name, description) 
                 VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')
             """.trimIndent()
-        )
-        val id: Int = bulldog.insert(connection)
+            )
+            bulldog.insert(connection)
+        }
         assertThat("id", id, present())
 
         val products = Query.sql(

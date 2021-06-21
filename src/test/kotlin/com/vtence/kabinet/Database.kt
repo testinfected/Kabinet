@@ -5,7 +5,7 @@ import javax.sql.DataSource
 
 class Database(private val dataSource: DataSource) {
 
-    fun connect(): Connection = dataSource.connection
+    fun openConnection(): Connection = dataSource.connection
 
     fun migrate() {
         DatabaseMigrator(dataSource).runMigrations()
@@ -15,6 +15,6 @@ class Database(private val dataSource: DataSource) {
         fun inMemory(): Database = connect(url = "jdbc:h2:mem:test", username = "kabinet", password = "test")
 
         fun connect(url: String, username: String, password: String?): Database =
-            Database(AutoSelectDataSource.inAutoCommitMode(url, username, password))
+            Database(AutoSelectDataSource.inTransactionalMode(url, username, password))
     }
 }
