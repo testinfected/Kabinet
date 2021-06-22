@@ -1,4 +1,4 @@
-class Product(
+data class Product(
     val id: Int? = null,
     val number: String,
     var name: String,

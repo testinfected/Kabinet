@@ -3,6 +3,11 @@ package com.vtence.kabinet
 import Product
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.vtence.kabinet.ProductThat.hasDescription
+import com.vtence.kabinet.ProductThat.hasId
+import com.vtence.kabinet.ProductThat.hasName
+import com.vtence.kabinet.ProductThat.hasNumber
+import com.vtence.kabinet.ProductThat.hasSameStateAs
 import kotlin.test.*
 
 class InsertionTest {
@@ -30,30 +35,18 @@ class InsertionTest {
             }.execute(connection)
         }
 
-        val allProducts = sql(
-            """
-                SELECT * FROM products
-            """.trimIndent()
-        )
-        val found = allProducts.list(connection) {
-            Product(
-                id = it.getInt("id"),
-                number = it.getString("number"),
-                name = it.getString("name"),
-                description = it.getString("description"),
-            )
-        }.single()
+        val found = selectAllProducts().single()
 
         assertThat(
             "inserted product", found,
-            ProductThat.hasId(id) and
-                    ProductThat.hasNumber("12345678") and
-                    ProductThat.hasName("English Bulldog") and
-                    ProductThat.hasDescription("A muscular, heavy dog")
+            hasId(id) and
+                    hasNumber("12345678") and
+                    hasName("English Bulldog") and
+                    hasDescription("A muscular, heavy dog")
         )
     }
 
-    val Product.dataset get() = dataset(this)
+    val Product.record get() = dataset(this)
 
     fun dataset(product: Product): Products.(Dataset) -> Unit = {
         it[number] = product.number
@@ -66,29 +59,44 @@ class InsertionTest {
     @Test
     fun `inserting again, this time using a dataset definition`() {
         val id = transaction {
-            Products.insert(bulldog.dataset).execute(connection)
+            Products.insert(bulldog.record).execute(connection)
         }
 
-        val allProducts = sql(
-            """
-                SELECT * FROM products
-            """.trimIndent()
+        val found = selectAllProducts().single()
+
+        assertThat("inserted product", found, hasSameStateAs(bulldog.copy(id = id)))
+    }
+
+
+    @Test
+    fun `inserting yet again, this time the old fashion way`() {
+        val id = transaction {
+            Insert.into(Products) {
+                it.setString(1, "12345678")
+                it.setString(2, "English Bulldog")
+                it.setString(3, "A muscular, heavy dog")
+            }.execute(connection)
+        }
+
+        val found = selectAllProducts().single()
+
+        assertThat(
+            "inserted product", found,
+            hasId(id) and
+                    hasNumber("12345678") and
+                    hasName("English Bulldog") and
+                    hasDescription("A muscular, heavy dog")
         )
-        val found = allProducts.list(connection) {
+    }
+
+    private fun selectAllProducts(): List<Product> {
+        return sql("SELECT * FROM products").list(connection) {
             Product(
                 id = it.getInt("id"),
                 number = it.getString("number"),
                 name = it.getString("name"),
                 description = it.getString("description"),
             )
-        }.single()
-
-        assertThat(
-            "inserted product", found,
-            ProductThat.hasId(id) and
-                    ProductThat.hasNumber("12345678") and
-                    ProductThat.hasName("English Bulldog") and
-                    ProductThat.hasDescription("A muscular, heavy dog")
-        )
+        }
     }
 }

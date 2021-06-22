@@ -3,7 +3,12 @@ package com.vtence.kabinet
 import java.sql.PreparedStatement
 
 
-class Dataset(private val table: ColumnSet) {
+fun interface DataChange {
+    fun applyTo(statement: PreparedStatement)
+}
+
+
+class Dataset(private val table: ColumnSet): DataChange {
     private val values: MutableMap<Column<*>, Any?> = mutableMapOf()
 
     operator fun <V> set(column: Column<V>, value: V) {
@@ -13,7 +18,7 @@ class Dataset(private val table: ColumnSet) {
         }
     }
 
-    fun fill(statement: PreparedStatement) {
+    override fun applyTo(statement: PreparedStatement) {
         table.columns(false).onEachIndexed { index, column ->
             column.set(statement, index + 1, values[column])
         }

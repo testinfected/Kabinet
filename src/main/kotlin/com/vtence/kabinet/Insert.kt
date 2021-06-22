@@ -3,7 +3,7 @@ package com.vtence.kabinet
 import java.sql.Connection
 
 
-class Insert(table: Table, private val values: Dataset) {
+class Insert(table: Table, private val values: DataChange) {
     private val statement = InsertStatement(table.tableName, table.columnNames(false))
 
     fun execute(connection: Connection): Int = execute(StatementExecutor(connection))
@@ -15,7 +15,7 @@ class Insert(table: Table, private val values: Dataset) {
 
     fun <T> execute(db: StatementExecutor, handleKeys: KeyHandler<T>): T {
         return db.execute(statement.compile { insert ->
-            values.fill(insert)
+            values.applyTo(insert)
             insert.executeUpdate()
             val keys = insert.generatedKeys.also { it.next() }
             handleKeys(keys)
@@ -25,7 +25,7 @@ class Insert(table: Table, private val values: Dataset) {
     override fun toString(): String = statement.toSql()
 
     companion object {
-        fun into(table: Table, values: Dataset): Insert {
+        fun into(table: Table, values: DataChange): Insert {
             return Insert(table, values)
         }
     }
