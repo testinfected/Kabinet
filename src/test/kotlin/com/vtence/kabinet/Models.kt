@@ -1,5 +1,5 @@
 class Product(
-    val id: Int?,
+    val id: Int? = null,
     val number: String,
     var name: String,
     var description: String
