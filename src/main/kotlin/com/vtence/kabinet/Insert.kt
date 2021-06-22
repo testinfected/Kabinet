@@ -3,8 +3,8 @@ package com.vtence.kabinet
 import java.sql.Connection
 
 
-class Insert(table: Table, private val values: Dehydrator) {
-    val statement = InsertStatement(table.tableName, table.columnNames(false))
+class Insert(table: Table, private val values: Dataset) {
+    private val statement = InsertStatement(table.tableName, table.columnNames(false))
 
     fun execute(connection: Connection): Int = execute(StatementExecutor(connection))
 
@@ -15,23 +15,22 @@ class Insert(table: Table, private val values: Dehydrator) {
 
     fun <T> execute(db: StatementExecutor, handleKeys: KeyHandler<T>): T {
         return db.execute(statement.compile { insert ->
-            values(insert)
+            values.fill(insert)
             insert.executeUpdate()
             val keys = insert.generatedKeys.also { it.next() }
             handleKeys(keys)
         })
     }
 
-    override fun toString(): String {
-        return statement.toSql()
-    }
+    override fun toString(): String = statement.toSql()
 
     companion object {
-        fun into(table: Table, values: Dehydrator): Insert {
+        fun into(table: Table, values: Dataset): Insert {
             return Insert(table, values)
         }
     }
 }
 
 
-fun Table.insert(values: Dehydrator) = Insert.into(this, values)
+fun <T : Table> T.insert(values: T.(Dataset) -> Unit): Insert =
+    Insert.into(this, Dataset(this).apply { values(this) })

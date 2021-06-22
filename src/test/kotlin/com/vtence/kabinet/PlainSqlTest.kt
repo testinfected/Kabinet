@@ -1,7 +1,7 @@
 package com.vtence.kabinet
 
 import Product
-import com.natpryce.hamkrest.allOf
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
@@ -57,11 +57,13 @@ class PlainSqlTest {
             )
         }
 
-        assertThat("products found", found, anyElement(allOf(
-            hasId(id),
-            hasNumber("12345678"),
-            hasName("English Bulldog"),
-            hasDescription("A muscular, heavy dog")
-        )))
+        assertThat(
+            "products found", found, anyElement(
+                hasId(id) and
+                        hasNumber("12345678") and
+                        hasName("English Bulldog") and
+                        hasDescription("A muscular, heavy dog")
+            )
+        )
     }
 }

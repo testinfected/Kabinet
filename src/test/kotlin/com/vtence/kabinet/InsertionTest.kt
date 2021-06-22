@@ -2,6 +2,7 @@ package com.vtence.kabinet
 
 import Product
 import com.natpryce.hamkrest.allOf
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import kotlin.test.*
 
@@ -24,12 +25,10 @@ class InsertionTest {
     fun `inserting a new record`() {
         val id = transaction {
             Products.insert {
-                it.setString(1, "12345678")
-                it.setString(2, "English Bulldog")
-                it.setString(3, "A muscular, heavy dog")
-            }.execute(connection) {
-                it.getInt(1)
-            }
+                it[number] = "12345678"
+                it[description] = "A muscular, heavy dog"
+                it[name] = "English Bulldog"
+            }.execute(connection)
         }
 
         val allProducts = sql(
@@ -47,12 +46,11 @@ class InsertionTest {
         }.single()
 
         assertThat(
-            "inserted product", found, allOf(
-                ProductThat.hasId(id),
-                ProductThat.hasNumber("12345678"),
-                ProductThat.hasName("English Bulldog"),
-                ProductThat.hasDescription("A muscular, heavy dog")
-            )
+            "inserted product", found,
+            ProductThat.hasId(id) and
+                    ProductThat.hasNumber("12345678") and
+                    ProductThat.hasName("English Bulldog") and
+                    ProductThat.hasDescription("A muscular, heavy dog")
         )
     }
 }
