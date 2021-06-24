@@ -17,12 +17,12 @@ interface ColumnType<T> {
 }
 
 
-object StringColumn: ColumnType<String?> {
+object StringType: ColumnType<String?> {
     override val sqlType: SQLType = JDBCType.VARCHAR
 }
 
 
-object IntColumn: ColumnType<Int?> {
+object IntType: ColumnType<Int?> {
     override val sqlType: SQLType = JDBCType.INTEGER
 }
 

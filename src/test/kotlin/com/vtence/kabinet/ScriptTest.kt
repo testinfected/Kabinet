@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
-class PlainSqlTest {
+class ScriptTest {
 
     val database = Database.inMemory()
     val connection = database.openConnection()

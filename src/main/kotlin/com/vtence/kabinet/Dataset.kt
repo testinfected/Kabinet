@@ -8,8 +8,8 @@ fun interface DataChange {
 }
 
 
-class Dataset(private val table: ColumnSet): DataChange {
-    private val values: MutableMap<Column<*>, Any?> = mutableMapOf()
+class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
+    private val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     operator fun <V> set(column: Column<V>, value: V) {
         when {
@@ -18,9 +18,20 @@ class Dataset(private val table: ColumnSet): DataChange {
         }
     }
 
+    override val columns: List<Column<*>>
+        get() = base.ifEmpty { values.keys.toList() }
+
     override fun applyTo(statement: PreparedStatement) {
-        table.columns(false).onEachIndexed { index, column ->
+        columns.onEachIndexed { index, column ->
             column.set(statement, index + 1, values[column])
         }
+    }
+
+    companion object {
+        fun closed(vararg columns: Column<*>) = closed(columns.toList())
+
+        fun closed(columns: List<Column<*>>) = Dataset(columns)
+
+        fun opened() = Dataset(listOf())
     }
 }

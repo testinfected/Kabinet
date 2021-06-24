@@ -3,12 +3,12 @@ package com.vtence.kabinet
 import java.sql.Connection
 
 
-fun sql(sql: String): PlainSql = PlainSql(sql)
+fun sql(sql: String): Script = Script(sql)
 
-class PlainSql(sql: String) {
-    private val statement = ParametrizedSqlStatement(sql)
+class Script(sql: String) {
+    private val statement = SqlStatement(sql)
 
-    operator fun set(name: String, value: Any?): PlainSql {
+    operator fun set(name: String, value: Any?): Script {
         statement[name] = value
         return this
     }
