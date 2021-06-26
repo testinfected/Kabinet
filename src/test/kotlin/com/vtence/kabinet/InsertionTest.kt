@@ -1,6 +1,7 @@
 package com.vtence.kabinet
 
 import Product
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.vtence.kabinet.ProductThat.hasDescription
@@ -86,6 +87,26 @@ class InsertionTest {
                     hasNumber("12345678") and
                     hasName("English Bulldog") and
                     hasDescription("A muscular, heavy dog")
+        )
+    }
+
+    @Test
+    fun `inserting a new record, without specifying nullable columns`() {
+        val id = transaction {
+            Products.insert {
+                it[number] = "77777777"
+                it[name] = "French Bulldog"
+            }.execute(connection)
+        }
+
+        val found = selectAllProducts().single()
+
+        assertThat(
+            "product", found,
+            hasId(id) and
+                    hasNumber("77777777") and
+                    hasName("French Bulldog") and
+                    hasDescription(absent())
         )
     }
 
