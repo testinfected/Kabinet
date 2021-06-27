@@ -13,14 +13,6 @@ class Script(sql: String) {
         return this
     }
 
-    fun insert(connection: Connection): Int = insert(StatementExecutor(connection))
-
-    fun insert(db: StatementExecutor): Int = insert(db, id)
-
-    fun <T> insert(connection: Connection, handleKeys: KeyHandler<T>): T {
-        return insert(StatementExecutor(connection), handleKeys)
-    }
-
     fun <T> insert(db: StatementExecutor, handleKeys: KeyHandler<T>): T {
         return db.execute(statement.retrieveGeneratedKeys().compile {
             it.executeUpdate()
@@ -30,9 +22,6 @@ class Script(sql: String) {
             }
         })
     }
-
-    fun <T> list(connection: Connection, hydrate: Hydrator<T>): List<T> =
-        list(StatementExecutor(connection)) { hydrate(it) }
 
     fun <T> list(db: StatementExecutor, hydrate: Hydrator<T>): List<T> {
         return db.execute(statement.compile {
@@ -47,3 +36,14 @@ class Script(sql: String) {
 
     override fun toString(): String = statement.toSql()
 }
+
+
+fun Script.insert(connection: Connection): Int = insert(StatementExecutor(connection))
+
+fun Script.insert(db: StatementExecutor): Int = insert(db, id)
+
+fun <T> Script.insert(connection: Connection, handleKeys: KeyHandler<T>): T =
+    insert(StatementExecutor(connection), handleKeys)
+
+fun <T> Script.list(connection: Connection, hydrate: Hydrator<T>): List<T> =
+    list(StatementExecutor(connection)) { hydrate(it) }

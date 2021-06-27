@@ -14,6 +14,11 @@ class ColumnTest {
     val productNumber = Column(Products, "number", IntType)
 
     @Test
+    fun `knows its fully qualified name`() {
+        assertThat(Products.name.qualifiedName, equalTo("products.name"))
+    }
+
+    @Test
     fun `defines equality on table and column names`() {
         assertThat("same instance", Products.name, equalTo(Products.name))
         assertThat("same definition", Products.name, equalTo(productName))

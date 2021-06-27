@@ -63,11 +63,7 @@ class UpdateTest {
 
     private fun persist(product: Product) {
         transaction {
-            Products.insert {
-                it[number] = product.number
-                it[description] = product.description
-                it[name] = product.name
-            }.execute(connection)
+            Products.insert(product.record).execute(connection)
         }
     }
 

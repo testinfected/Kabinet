@@ -47,18 +47,10 @@ class InsertionTest {
         )
     }
 
-    val Product.record get() = dataset(this)
-
-    fun dataset(product: Product): Products.(Dataset) -> Unit = {
-        it[number] = product.number
-        it[description] = product.description
-        it[name] = product.name
-    }
-
     val bulldog = Product(number = "12345678", name = "English Bulldog", description = "A muscular, heavy dog")
 
     @Test
-    fun `inserting again, this time using a dataset definition`() {
+    fun `inserting again, this time using a record definition`() {
         val id = transaction {
             Products.insert(bulldog.record).execute(connection)
         }
@@ -111,7 +103,7 @@ class InsertionTest {
     }
 
     private fun selectAllProducts(): List<Product> {
-        return sql("SELECT * FROM products").list(connection) {
+        return Products.selectAll().list(connection) {
             Product(
                 id = it.getInt("id"),
                 number = it.getString("number"),

@@ -12,7 +12,7 @@ object ProductThat {
         hasId(other.id) and
         hasNumber(other.number) and
         hasName(other.name) and
-        hasDescription("A muscular, heavy dog")
+        hasDescription(other.description)
 
     fun hasId(id: Int?) = has(Product::id, equalTo(id))
     fun hasNumber(number: String) = has(Product::number, equalTo(number))

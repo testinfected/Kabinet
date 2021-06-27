@@ -32,7 +32,9 @@ interface StatementExecutor {
     companion object {
         operator fun invoke(connection: Connection): StatementExecutor {
             return object : StatementExecutor {
-                override fun <T> execute(statement: JdbcStatement<T>): T = statement.execute(connection)
+                override fun <T> execute(statement: JdbcStatement<T>): T {
+                    return statement.execute(connection)
+                }
             }
         }
     }
