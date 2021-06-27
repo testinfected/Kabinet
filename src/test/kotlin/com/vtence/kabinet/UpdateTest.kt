@@ -1,9 +1,10 @@
 package com.vtence.kabinet
 
 import Product
-import com.natpryce.hamkrest.allElements
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import com.vtence.kabinet.ProductThat.hasDescription
+import com.vtence.kabinet.ProductThat.hasNumber
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -24,18 +25,40 @@ class UpdateTest {
     }
 
     @Test
-    fun `updating a record partially`() {
-        persist(Product(number = "11111111", name = "English Bulldog", description = "A cute, small playful dog"))
+    fun `updating all records partially`() {
+        persist(Product(number = "11111111", name = "English Bulldog"))
+        persist(Product(number = "77777777", name = "French Bulldog"))
 
         val updated: Int = transaction {
             Products.update {
-                it[name] = "French Bulldog"
+                it[description] = "A companion for kids"
             }.execute(connection)
         }
-        assertThat("update count", updated, equalTo(1))
+        assertThat("update count", updated, equalTo(2))
 
         val records = selectAllProducts()
-        assertThat("updated product", records, allElements(ProductThat.hasName("French Bulldog")))
+        assertThat("updated products", records, allElements(hasDescription("A companion for kids")))
+    }
+
+    @Test
+    fun `updating a specific existing record`() {
+        persist(Product(number = "11111111", name = "English Bulldog"))
+        persist(Product(number = "77777777", name = "French Bulldog"))
+
+        transaction {
+            val updated: Int = Products.update {
+                it[description] = "A miniature Bulldog"
+            }.where("${Products.number} = ?", "77777777")
+            .execute(connection)
+
+            assertThat("update count", updated, equalTo(1))
+        }
+
+        val records = selectAllProducts()
+        assertThat("updated record", records, anyElement(
+            hasDescription("A miniature Bulldog") and hasNumber("77777777")))
+        assertThat("original record", records, anyElement(
+            hasDescription(absent()) and hasNumber("11111111")))
     }
 
     private fun persist(product: Product) {
