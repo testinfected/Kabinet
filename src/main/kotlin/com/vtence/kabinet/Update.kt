@@ -1,15 +1,14 @@
 package com.vtence.kabinet
 
-import java.sql.Connection
 import java.sql.PreparedStatement
 
 
-class Update(table: Table, private val columns: List<Column<*>>, private val values: DataChange) {
+class Update(table: Table, private val columns: List<Column<*>>, private val values: DataChange) : Command {
     private val statement = UpdateStatement(table.tableName, columns.names)
     private val parameters = mutableListOf<Any?>()
 
-    fun execute(db: StatementExecutor): Int {
-        return db.execute(statement.compile { update ->
+    override fun execute(executor: StatementExecutor): Int {
+        return executor.execute(statement.compile { update ->
             values.applyTo(update)
             setParameters(update)
             update.executeUpdate()
@@ -18,8 +17,8 @@ class Update(table: Table, private val columns: List<Column<*>>, private val val
 
     override fun toString(): String = statement.toSql()
 
-    fun where(clause: String, vararg params: Any?): Update {
-        statement.where(clause)
+    fun where(condition: String, vararg params: Any?): Command {
+        statement.where(condition)
         parameters.addAll(params)
         return this
     }
@@ -41,10 +40,11 @@ class Update(table: Table, private val columns: List<Column<*>>, private val val
     }
 }
 
-fun Update.execute(connection: Connection): Int = execute(StatementExecutor(connection))
-
 
 fun <T : Table> T.update(record: T.(Dataset) -> Unit): Update {
     val change = Dataset.opened().apply { record(this) }
     return Update.set(this, columns = change.columns.toTypedArray(), values = change)
 }
+
+fun <T : Table> T.updateWhere(condition: String, vararg params: Any?, record: T.(Dataset) -> Unit): Command =
+    update(record).where(condition, *params)

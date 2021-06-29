@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import com.vtence.kabinet.ProductThat.hasDescription
 import com.vtence.kabinet.ProductThat.hasNumber
+import com.vtence.kabinet.Products.number
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -46,10 +47,9 @@ class UpdateTest {
         persist(Product(number = "77777777", name = "French Bulldog"))
 
         transaction {
-            val updated: Int = Products.update {
+            val updated: Int = Products.updateWhere("$number = ?", "77777777") {
                 it[description] = "A miniature Bulldog"
-            }.where("${Products.number} = ?", "77777777")
-            .execute(connection)
+            }.execute(connection)
 
             assertThat("update count", updated, equalTo(1))
         }
@@ -68,7 +68,7 @@ class UpdateTest {
     }
 
     private fun selectAllProducts(): List<Product> {
-        return sql("SELECT * FROM products").list(connection) {
+        return Products.selectAll().list(connection) {
             Product(
                 id = it.getInt("id"),
                 number = it.getString("number"),
