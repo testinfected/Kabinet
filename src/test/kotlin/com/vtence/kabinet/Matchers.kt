@@ -16,7 +16,8 @@ object ProductThat {
 
     fun hasId(id: Int?) = has(Product::id, equalTo(id))
     fun hasNumber(number: String) = has(Product::number, equalTo(number))
-    fun hasName(name: String) = has(Product::name, equalTo(name))
+    fun hasName(name: String) = hasName(equalTo(name))
+    fun hasName(matching: Matcher<String>) = has(Product::name, matching)
     fun hasDescription(description: String?) = has(Product::description, equalTo(description))
     fun hasDescription(matching: Matcher<String?>) = has(Product::description, matching)
 }

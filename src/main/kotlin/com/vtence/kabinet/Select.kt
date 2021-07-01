@@ -3,10 +3,30 @@ package com.vtence.kabinet
 import java.sql.Connection
 
 
-class Select(table: Table, columns: List<Column<*>>) {
+abstract class Query<Q : Query<Q>> {
+
+    abstract fun limit(count: Int, offset: Int = 0): Q
+
+    fun <T> first(db: StatementExecutor, hydrate: Hydrator<T>): T? =
+        limit(1).list(db, hydrate).firstOrNull()
+
+    abstract fun <T> list(db: StatementExecutor, hydrate: Hydrator<T>): List<T>
+}
+
+
+fun <T, Q : Query<Q>> Q.list(connection: Connection, hydrate: Hydrator<T>): List<T> =
+    list(StatementExecutor(connection), hydrate)
+
+fun <T, Q : Query<Q>> Q.first(connection: Connection, hydrate: Hydrator<T>): T? =
+    first(StatementExecutor(connection), hydrate)
+
+
+class Select(table: Table, columns: List<Column<*>>) : Query<Select>() {
     private val statement = SelectStatement(table.tableName, columns.qualifiedNames)
 
-    fun <T> list(db: StatementExecutor, hydrate: Hydrator<T>): List<T> {
+    override fun limit(count: Int, offset: Int): Select = apply { statement.limitTo(count, start = offset) }
+
+    override fun <T> list(db: StatementExecutor, hydrate: Hydrator<T>): List<T> {
         return db.execute(statement.compile {
             val rs = it.executeQuery()
             val result = mutableListOf<T>()
@@ -32,6 +52,3 @@ class Select(table: Table, columns: List<Column<*>>) {
 fun <T : Table> T.selectAll(): Select {
     return Select.from(this, *columns.toTypedArray())
 }
-
-fun <T> Select.list(connection: Connection, hydrate: Hydrator<T>): List<T> =
-    list(StatementExecutor(connection), hydrate)

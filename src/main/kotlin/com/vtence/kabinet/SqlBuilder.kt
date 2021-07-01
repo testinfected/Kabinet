@@ -11,6 +11,8 @@ class SqlBuilder {
 
     fun append(value: String): SqlBuilder = apply { sql.append(value) }
 
+    fun appendValue(value: Int): SqlBuilder = apply { sql.append(value) }
+
     fun <T> Iterable<T>.join(
         separator: CharSequence = ", ",
         prefix: CharSequence = "",
