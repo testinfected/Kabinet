@@ -1,7 +1,5 @@
 package com.vtence.kabinet
 
-import java.sql.PreparedStatement
-
 
 class Update(table: Table, private val columns: List<Column<*>>, private val values: DataChange) : Command {
     private val statement = UpdateStatement(table.tableName, columns.names)
@@ -9,8 +7,8 @@ class Update(table: Table, private val columns: List<Column<*>>, private val val
 
     override fun execute(executor: StatementExecutor): Int {
         return executor.execute(statement.compile { update ->
-            values.applyTo(update)
-            setParameters(update)
+            values(update)
+            update.setParameters(parameters, offset = columns.size)
             update.executeUpdate()
         })
     }
@@ -21,12 +19,6 @@ class Update(table: Table, private val columns: List<Column<*>>, private val val
         statement.where(condition)
         parameters.addAll(params)
         return this
-    }
-
-    private fun setParameters(statement: PreparedStatement) {
-        for (i in parameters.indices) {
-            statement[columns.size + i + 1] = parameters[i]
-        }
     }
 
     companion object {

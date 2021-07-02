@@ -9,7 +9,7 @@ class Insert(table: Table, private val values: DataChange) {
 
     fun <T> execute(db: StatementExecutor, handleKeys: KeyHandler<T>): T {
         return db.execute(statement.compile { insert ->
-            values.applyTo(insert)
+            values(insert)
             insert.executeUpdate()
             val keys = insert.generatedKeys.also { it.next() }
             handleKeys(keys)

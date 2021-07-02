@@ -56,7 +56,7 @@ class SelectionTest {
 
         assertThat("selection", selection, hasSize(equalTo(3)))
         assertThat(
-            "selected products", selection,
+            "selected", selection,
             anyElement(hasName("French Bulldog")) and
                     anyElement(hasName("English Bulldog")) and
                     anyElement(
@@ -73,13 +73,13 @@ class SelectionTest {
 
         val selection = Products.selectAll().first(connection) { hydrate(it) }
 
-        assertThat("selected product", selection, present(hasName("French Bulldog")))
+        assertThat("selected", selection, present(hasName("French Bulldog")))
     }
 
     val dalmatian = Product(name = "Dalmatian", number = "55555555")
 
     @Test
-    fun `retrieving a subset of the records`() {
+    fun `limiting the results to a subset`() {
         persist(lab)
         persist(frenchie)
         persist(bully)
@@ -91,7 +91,21 @@ class SelectionTest {
 
         assertThat("selection", selection, hasSize(equalTo(2)))
         assertThat(
-            "selected products", selection, allElements(hasName(containsSubstring("Bulldog")))
+            "selected", selection, allElements(hasName(containsSubstring("Bulldog")))
+        )
+    }
+
+    @Test
+    fun `selecting only those records that fulfill a specified criterion`() {
+        persist(lab)
+        persist(frenchie)
+        persist(dalmatian)
+
+        val selection = Products.selectWhere("name = ?", "French Bulldog")
+            .list(connection) { hydrate(it) }
+
+        assertThat(
+            "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))
         )
     }
 

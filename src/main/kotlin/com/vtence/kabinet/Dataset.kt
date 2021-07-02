@@ -3,9 +3,7 @@ package com.vtence.kabinet
 import java.sql.PreparedStatement
 
 
-fun interface DataChange {
-    fun applyTo(statement: PreparedStatement)
-}
+typealias DataChange = (PreparedStatement) -> Unit
 
 
 class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
@@ -21,7 +19,7 @@ class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
     override val columns: List<Column<*>>
         get() = base.ifEmpty { values.keys.toList() }
 
-    override fun applyTo(statement: PreparedStatement) {
+    override operator fun invoke(statement: PreparedStatement) {
         columns.onEachIndexed { index, column ->
             column.set(statement, index + 1, values[column])
         }
