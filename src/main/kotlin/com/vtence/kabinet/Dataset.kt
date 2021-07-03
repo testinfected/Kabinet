@@ -11,7 +11,7 @@ class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
 
     operator fun <V> set(column: Column<V>, value: V?) {
         when {
-            values.containsKey(column) -> error("$column already present in dataset")
+            values.containsKey(column) -> error("'$column' already present in dataset")
             else -> values[column] = value
         }
     }

@@ -37,7 +37,7 @@ class UpdateTest {
         }
         assertThat("update count", updated, equalTo(2))
 
-        val records = selectAllProducts()
+        val records = Products.selectAll().list(connection, Products.hydrate)
         assertThat("updated products", records, allElements(hasDescription("A companion for kids")))
     }
 
@@ -54,27 +54,22 @@ class UpdateTest {
             assertThat("update count", updated, equalTo(1))
         }
 
-        val records = selectAllProducts()
-        assertThat("updated record", records, anyElement(
-            hasDescription("A miniature Bulldog") and hasNumber("77777777")))
-        assertThat("original record", records, anyElement(
-            hasDescription(absent()) and hasNumber("11111111")))
+        val records = Products.selectAll().list(connection, Products.hydrate)
+        assertThat(
+            "updated record", records, anyElement(
+                hasDescription("A miniature Bulldog") and hasNumber("77777777")
+            )
+        )
+        assertThat(
+            "original record", records, anyElement(
+                hasDescription(absent()) and hasNumber("11111111")
+            )
+        )
     }
 
     private fun persist(product: Product) {
         transaction {
             Products.insert(product.record).execute(connection)
-        }
-    }
-
-    private fun selectAllProducts(): List<Product> {
-        return Products.selectAll().list(connection) {
-            Product(
-                id = it.getInt("id"),
-                number = it.getString("number"),
-                name = it.getString("name"),
-                description = it.getString("description"),
-            )
         }
     }
 }

@@ -10,6 +10,7 @@ import com.vtence.kabinet.ProductThat.hasId
 import com.vtence.kabinet.ProductThat.hasName
 import com.vtence.kabinet.ProductThat.hasNumber
 import org.junit.jupiter.api.Test
+import java.sql.ResultSet
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
@@ -38,7 +39,7 @@ class ScriptTest {
                 VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')
             """.trimIndent()
             )
-            bulldog.insert(connection)
+            bulldog.insert(connection) { id }
         }
         assertThat("id", id, present())
 
@@ -50,10 +51,10 @@ class ScriptTest {
         )
         val found = products.set("number", "12345678").list(connection) {
             Product(
-                id = it.getInt("id"),
-                number = it.getString("number"),
-                name = it.getString("name"),
-                description = it.getString("description"),
+                id = getInt("id"),
+                number = getString("number"),
+                name = getString("name"),
+                description = getString("description"),
             )
         }
 
@@ -65,5 +66,9 @@ class ScriptTest {
                         hasDescription("A muscular, heavy dog")
             )
         )
+    }
+
+    val ResultSet.id: Int get() {
+        return getInt(runCatching { findColumn("id") }.getOrDefault(1))
     }
 }

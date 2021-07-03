@@ -5,11 +5,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import com.vtence.kabinet.ProductThat.hasName
 import com.vtence.kabinet.ProductThat.hasSameStateAs
-import com.vtence.kabinet.Products.description
 import com.vtence.kabinet.Products.id
-import com.vtence.kabinet.Products.name
-import com.vtence.kabinet.Products.number
-import java.sql.ResultSet
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -34,13 +30,13 @@ class SelectionTest {
 
     @Test
     fun `retrieving a record from a table`() {
-        val key = transaction {
-            Products.insert(frenchie.record).execute(connection)
+        val id = transaction {
+            Products.insert(frenchie.record).execute(connection) get id
         }
 
-        val records = Products.selectAll().list(connection) { hydrate(it) }
+        val records = Products.selectAll().list(connection) { Products.hydrate(this) }
 
-        assertThat("record", records, anyElement(hasSameStateAs(frenchie.copy(id = key))))
+        assertThat("record", records, anyElement(hasSameStateAs(frenchie.copy(id = id))))
     }
 
     val bully = Product(number = "12345678", name = "English Bulldog", description = "A heavy, muscular dog")
@@ -52,7 +48,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll().list(connection) { hydrate(it) }
+        val selection = Products.selectAll().list(connection) { Products.hydrate(this) }
 
         assertThat("selection", selection, hasSize(equalTo(3)))
         assertThat(
@@ -71,7 +67,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll().first(connection) { hydrate(it) }
+        val selection = Products.selectAll().single(connection) { Products.hydrate(this) }
 
         assertThat("selected", selection, present(hasName("French Bulldog")))
     }
@@ -87,7 +83,7 @@ class SelectionTest {
 
         val selection = Products.selectAll()
             .limit(2, offset = 1)
-            .list(connection) { hydrate(it) }
+            .list(connection) { Products.hydrate(this) }
 
         assertThat("selection", selection, hasSize(equalTo(2)))
         assertThat(
@@ -102,24 +98,16 @@ class SelectionTest {
         persist(dalmatian)
 
         val selection = Products.selectWhere("name = ?", "French Bulldog")
-            .list(connection) { hydrate(it) }
+            .list(connection) { Products.hydrate(this) }
 
         assertThat(
             "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))
         )
     }
 
-    private fun hydrate(rs: ResultSet) = Product(
-        id = id.get(rs, 1),
-        // todo nullable/non nullable columns
-        number = number.get(rs, 2)!!,
-        name = name.get(rs, 3)!!,
-        description = description.get(rs, 4)
-    )
-
     private fun persist(product: Product): Int {
         return transaction {
-            Products.insert(product.record).execute(connection)
+            Products.insert(product.record).execute(connection) get id
         }
     }
 }

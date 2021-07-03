@@ -8,18 +8,18 @@ abstract class Query {
 
     abstract fun limit(count: Int, offset: Int = 0): Query
 
-    fun <T> first(db: StatementExecutor, hydrate: Hydrator<T>): T? =
-        limit(1).list(db, hydrate).firstOrNull()
+    fun <T> single(db: StatementExecutor, hydrate: ResultSet.() -> T): T? =
+        limit(1).list(db, hydrate).singleOrNull()
 
-    abstract fun <T> list(db: StatementExecutor, hydrate: Hydrator<T>): List<T>
+    abstract fun <T> list(db: StatementExecutor, hydrate: ResultSet.() -> T): List<T>
 }
 
 
-fun <T> Query.list(connection: Connection, hydrate: Hydrator<T>): List<T> =
+fun <T> Query.list(connection: Connection, hydrate: ResultSet.() -> T): List<T> =
     list(StatementExecutor(connection), hydrate)
 
-fun <T> Query.first(connection: Connection, hydrate: Hydrator<T>): T? =
-    first(StatementExecutor(connection), hydrate)
+fun <T> Query.single(connection: Connection, hydrate: ResultSet.() -> T): T? =
+    single(StatementExecutor(connection), hydrate)
 
 
 class Select(table: Table, columns: List<Column<*>>) : Query() {
@@ -33,14 +33,14 @@ class Select(table: Table, columns: List<Column<*>>) : Query() {
 
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
 
-    override fun <T> list(db: StatementExecutor, hydrate: Hydrator<T>): List<T> {
+    override fun <T> list(db: StatementExecutor, hydrate: ResultSet.() -> T): List<T> {
         return db.execute(statement.compile { select ->
             select.setParameters(parameters)
             read(select.executeQuery(), hydrate)
         })
     }
 
-    private fun <T> read(rs: ResultSet, hydrate: Hydrator<T>): List<T> {
+    private fun <T> read(rs: ResultSet, hydrate: ResultSet.() -> T): List<T> {
         val result = mutableListOf<T>()
         while (rs.next()) {
             result += hydrate(rs)

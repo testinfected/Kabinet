@@ -4,11 +4,13 @@ import Product
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.present
 import com.vtence.kabinet.ProductThat.hasDescription
 import com.vtence.kabinet.ProductThat.hasId
 import com.vtence.kabinet.ProductThat.hasName
 import com.vtence.kabinet.ProductThat.hasNumber
 import com.vtence.kabinet.ProductThat.hasSameStateAs
+import com.vtence.kabinet.Products.id
 import kotlin.test.*
 
 class InsertionTest {
@@ -27,8 +29,8 @@ class InsertionTest {
     }
 
     @Test
-    fun `inserting a new record by building the dataset`() {
-        val id = transaction {
+    fun `inserting a new record`() {
+        transaction {
             Products.insert {
                 it[number] = "12345678"
                 it[description] = "A muscular, heavy dog"
@@ -36,15 +38,30 @@ class InsertionTest {
             }.execute(connection)
         }
 
-        val found = selectAllProducts().single()
+        val inserted = Products.selectAll().single(connection, Products.hydrate)
 
         assertThat(
-            "inserted product", found,
-            hasId(id) and
-                    hasNumber("12345678") and
-                    hasName("English Bulldog") and
-                    hasDescription("A muscular, heavy dog")
+            "inserted", inserted, present(
+                hasNumber("12345678") and
+                        hasName("English Bulldog") and
+                        hasDescription("A muscular, heavy dog")
+            )
         )
+    }
+
+    @Test
+    fun `retrieving the generated keys`() {
+        val id = transaction {
+            Products.insert {
+                it[number] = "12345678"
+                it[description] = "A muscular, heavy dog"
+                it[name] = "English Bulldog"
+            }.execute(connection) get id
+        }
+
+        val inserted = Products.selectAll().single(connection, Products.hydrate)
+
+        assertThat("inserted", inserted, present(hasId(id)))
     }
 
     val bulldog = Product(number = "12345678", name = "English Bulldog", description = "A muscular, heavy dog")
@@ -52,12 +69,12 @@ class InsertionTest {
     @Test
     fun `inserting again, this time using a record definition`() {
         val id = transaction {
-            Products.insert(bulldog.record).execute(connection)
+            Products.insert(bulldog.record).execute(connection) get id
         }
 
-        val found = selectAllProducts().single()
+        val inserted = Products.selectAll().single(connection, Products.hydrate)
 
-        assertThat("inserted product", found, hasSameStateAs(bulldog.copy(id = id)))
+        assertThat("inserted", inserted, present(hasSameStateAs(bulldog.copy(id = id))))
     }
 
 
@@ -68,48 +85,40 @@ class InsertionTest {
                 it.setString(1, "12345678")
                 it.setString(2, "English Bulldog")
                 it.setString(3, "A muscular, heavy dog")
-            }.execute(connection)
+            }.execute(connection) get id
         }
 
-        val found = selectAllProducts().single()
+        val inserted = Products.selectAll().single(connection, Products.hydrate)
 
         assertThat(
-            "inserted product", found,
-            hasId(id) and
-                    hasNumber("12345678") and
-                    hasName("English Bulldog") and
-                    hasDescription("A muscular, heavy dog")
+            "inserted", inserted, present(
+                hasId(id) and
+                        hasNumber("12345678") and
+                        hasName("English Bulldog") and
+                        hasDescription("A muscular, heavy dog")
+            )
         )
     }
 
     @Test
-    fun `inserting a new record, without specifying nullable columns`() {
+    fun `omitting nullable columns`() {
         val id = transaction {
             Products.insert {
                 it[number] = "77777777"
                 it[name] = "French Bulldog"
-            }.execute(connection)
+            }.execute(connection) get id
         }
 
-        val found = selectAllProducts().single()
+        val inserted = Products.selectAll().single(connection, Products.hydrate)
 
         assertThat(
-            "product", found,
-            hasId(id) and
-                    hasNumber("77777777") and
-                    hasName("French Bulldog") and
-                    hasDescription(absent())
-        )
-    }
-
-    private fun selectAllProducts(): List<Product> {
-        return Products.selectAll().list(connection) {
-            Product(
-                id = it.getInt("id"),
-                number = it.getString("number"),
-                name = it.getString("name"),
-                description = it.getString("description"),
+            "inserted", inserted,
+            present(
+                hasId(id) and
+                        hasNumber("77777777") and
+                        hasName("French Bulldog") and
+                        hasDescription(absent())
             )
-        }
+        )
     }
 }
