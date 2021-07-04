@@ -34,7 +34,7 @@ class SelectionTest {
             Products.insert(frenchie.record).execute(connection) get id
         }
 
-        val records = Products.selectAll().list(connection) { Products.hydrate(this) }
+        val records = Products.selectAll(connection) { product }
 
         assertThat("record", records, anyElement(hasSameStateAs(frenchie.copy(id = id))))
     }
@@ -48,7 +48,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll().list(connection) { Products.hydrate(this) }
+        val selection = Products.selectAll(connection) { product }
 
         assertThat("selection", selection, hasSize(equalTo(3)))
         assertThat(
@@ -67,7 +67,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll().single(connection) { Products.hydrate(this) }
+        val selection = Products.select().first(connection) { product }
 
         assertThat("selected", selection, present(hasName("French Bulldog")))
     }
@@ -81,9 +81,11 @@ class SelectionTest {
         persist(bully)
         persist(dalmatian)
 
-        val selection = Products.selectAll()
-            .limit(2, offset = 1)
-            .list(connection) { Products.hydrate(this) }
+        val selection =
+            Products
+                .select()
+                .limit(2, offset = 1)
+                .list(connection) { product }
 
         assertThat("selection", selection, hasSize(equalTo(2)))
         assertThat(
@@ -97,8 +99,10 @@ class SelectionTest {
         persist(frenchie)
         persist(dalmatian)
 
-        val selection = Products.selectWhere("name = ?", "French Bulldog")
-            .list(connection) { Products.hydrate(this) }
+        val selection =
+            Products
+                .selectWhere("name = ?", "French Bulldog")
+                .list(connection) { product }
 
         assertThat(
             "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))

@@ -37,7 +37,7 @@ class UpdateTest {
         }
         assertThat("update count", updated, equalTo(2))
 
-        val records = Products.selectAll().list(connection, Products.hydrate)
+        val records = Products.selectAll(connection, Products.hydrate)
         assertThat("updated products", records, allElements(hasDescription("A companion for kids")))
     }
 
@@ -54,7 +54,7 @@ class UpdateTest {
             assertThat("update count", updated, equalTo(1))
         }
 
-        val records = Products.selectAll().list(connection, Products.hydrate)
+        val records = Products.selectAll(connection, Products.hydrate)
         assertThat(
             "updated record", records, anyElement(
                 hasDescription("A miniature Bulldog") and hasNumber("77777777")

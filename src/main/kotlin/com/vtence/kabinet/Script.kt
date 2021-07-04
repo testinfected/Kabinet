@@ -12,8 +12,8 @@ class Script(sql: String) {
         return this
     }
 
-    fun <T> insert(db: StatementExecutor, handleKeys: ResultSet.() -> T): T {
-        return db.execute(statement.retrieveGeneratedKeys().compile {
+    fun <T> insert(executor: StatementExecutor, handleKeys: ResultSet.() -> T): T {
+        return executor.execute(statement.retrieveGeneratedKeys().compile {
             it.executeUpdate()
             it.generatedKeys.run {
                 next()
@@ -22,8 +22,8 @@ class Script(sql: String) {
         })
     }
 
-    fun <T> list(db: StatementExecutor, hydrate: ResultSet.() -> T): List<T> {
-        return db.execute(statement.compile {
+    fun <T> list(executor: StatementExecutor, hydrate: ResultSet.() -> T): List<T> {
+        return executor.execute(statement.compile {
             val rs = it.executeQuery()
             val result = mutableListOf<T>()
             while (rs.next()) {
@@ -38,7 +38,7 @@ class Script(sql: String) {
 
 fun Script.insert(connection: Connection): Unit = insert(StatementExecutor(connection))
 
-fun Script.insert(db: StatementExecutor): Unit = insert(db) {}
+fun Script.insert(executor: StatementExecutor): Unit = insert(executor) {}
 
 fun <T> Script.insert(connection: Connection, handleKeys: ResultSet.() -> T): T =
     insert(StatementExecutor(connection)) { handleKeys() }

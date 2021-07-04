@@ -38,7 +38,7 @@ class InsertionTest {
             }.execute(connection)
         }
 
-        val inserted = Products.selectAll().single(connection, Products.hydrate)
+        val inserted = Products.selectAll(connection, Products.hydrate).singleOrNull()
 
         assertThat(
             "inserted", inserted, present(
@@ -59,7 +59,7 @@ class InsertionTest {
             }.execute(connection) get id
         }
 
-        val inserted = Products.selectAll().single(connection, Products.hydrate)
+        val inserted = Products.selectAll(connection, Products.hydrate).singleOrNull()
 
         assertThat("inserted", inserted, present(hasId(id)))
     }
@@ -72,7 +72,7 @@ class InsertionTest {
             Products.insert(bulldog.record).execute(connection) get id
         }
 
-        val inserted = Products.selectAll().single(connection, Products.hydrate)
+        val inserted = Products.selectAll(connection, Products.hydrate).singleOrNull()
 
         assertThat("inserted", inserted, present(hasSameStateAs(bulldog.copy(id = id))))
     }
@@ -88,7 +88,7 @@ class InsertionTest {
             }.execute(connection) get id
         }
 
-        val inserted = Products.selectAll().single(connection, Products.hydrate)
+        val inserted = Products.selectAll(connection, Products.hydrate).singleOrNull()
 
         assertThat(
             "inserted", inserted, present(
@@ -109,7 +109,7 @@ class InsertionTest {
             }.execute(connection) get id
         }
 
-        val inserted = Products.selectAll().single(connection, Products.hydrate)
+        val inserted = Products.selectAll(connection, Products.hydrate).singleOrNull()
 
         assertThat(
             "inserted", inserted,
