@@ -15,6 +15,8 @@ class UpdateTest {
     val connection = database.openConnection()
     val transaction = JDBCTransactor(connection)
 
+    val recorder = StatementRecorder(connection)
+
     @BeforeTest
     fun prepareDatabase() {
         database.migrate()
@@ -33,11 +35,14 @@ class UpdateTest {
         val updated: Int = transaction {
             Products.update {
                 it[description] = "A companion for kids"
-            }.execute(connection)
+            }.execute(recorder)
         }
+        recorder.assertSql("UPDATE products SET description = ?")
         assertThat("update count", updated, equalTo(2))
 
-        val records = Products.selectAll(connection, Products.hydrate)
+        val records = Products.selectAll(recorder, Products.hydrate)
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
+
         assertThat("updated products", records, allElements(hasDescription("A companion for kids")))
     }
 
@@ -48,13 +53,17 @@ class UpdateTest {
 
         transaction {
             val updated: Int = Products.updateWhere("$number = ?", "77777777") {
+                it[name] = "Frenchie"
                 it[description] = "A miniature Bulldog"
-            }.execute(connection)
+            }.execute(recorder)
+            recorder.assertSql("UPDATE products SET name = ?, description = ? WHERE products.number = ?")
 
             assertThat("update count", updated, equalTo(1))
         }
 
-        val records = Products.selectAll(connection, Products.hydrate)
+        val records = Products.selectAll(recorder, Products.hydrate)
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
+
         assertThat(
             "updated record", records, anyElement(
                 hasDescription("A miniature Bulldog") and hasNumber("77777777")
@@ -69,7 +78,8 @@ class UpdateTest {
 
     private fun persist(product: Product) {
         transaction {
-            Products.insert(product.record).execute(connection)
+            Products.insert(product.record).execute(recorder)
         }
+        recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
     }
 }

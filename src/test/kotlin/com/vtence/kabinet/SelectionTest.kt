@@ -16,6 +16,8 @@ class SelectionTest {
     val connection = database.openConnection()
     val transaction = JDBCTransactor(connection)
 
+    val recorder = StatementRecorder(connection)
+
     @BeforeTest
     fun prepareDatabase() {
         database.migrate()
@@ -30,11 +32,10 @@ class SelectionTest {
 
     @Test
     fun `retrieving a record from a table`() {
-        val id = transaction {
-            Products.insert(frenchie.record).execute(connection) get id
-        }
+        val id = persist(frenchie)
 
-        val records = Products.selectAll(connection) { product }
+        val records = Products.selectAll(recorder) { product }
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("record", records, anyElement(hasSameStateAs(frenchie.copy(id = id))))
     }
@@ -48,7 +49,8 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll(connection) { product }
+        val selection = Products.selectAll(recorder) { product }
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("selection", selection, hasSize(equalTo(3)))
         assertThat(
@@ -67,7 +69,8 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.select().first(connection) { product }
+        val selection = Products.select().first(recorder) { product }
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products LIMIT 1")
 
         assertThat("selected", selection, present(hasName("French Bulldog")))
     }
@@ -85,7 +88,8 @@ class SelectionTest {
             Products
                 .select()
                 .limit(2, offset = 1)
-                .list(connection) { product }
+                .list(recorder) { product }
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products LIMIT 2 OFFSET 1")
 
         assertThat("selection", selection, hasSize(equalTo(2)))
         assertThat(
@@ -102,7 +106,10 @@ class SelectionTest {
         val selection =
             Products
                 .selectWhere("name = ?", "French Bulldog")
-                .list(connection) { product }
+                .list(recorder) { product }
+        recorder.assertSql(
+            "SELECT products.id, products.number, products.name, products.description FROM products " +
+                    "WHERE name = ?")
 
         assertThat(
             "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))
@@ -111,7 +118,9 @@ class SelectionTest {
 
     private fun persist(product: Product): Int {
         return transaction {
-            Products.insert(product.record).execute(connection) get id
+            Products.insert(product.record).execute(recorder) get id
+        }.also {
+            recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
         }
     }
 }
