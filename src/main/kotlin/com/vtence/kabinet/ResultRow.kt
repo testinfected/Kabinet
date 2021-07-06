@@ -19,9 +19,11 @@ class ResultRow(private val fields: Map<Column<*>, Int>) {
     private val data = arrayOfNulls<Any?>(fields.size)
 
     operator fun <T> get(column: Column<T>): T {
-        val index = fields[column] ?: error("Column '$column' not in result set")
+        val index = fields[column] ?: error("'$column' not in result set")
+        val value = data[index]
+        if (value == null && !column.nullable) error("'$column' is null in result set")
         @Suppress("UNCHECKED_CAST")
-        return data[index] as T
+        return value as T
     }
 
     companion object {

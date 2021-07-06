@@ -9,7 +9,7 @@ typealias DataChange = (PreparedStatement) -> Unit
 class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
     private val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
-    operator fun <V> set(column: Column<V>, value: V?) {
+    operator fun <V> set(column: Column<V>, value: V) {
         when {
             values.containsKey(column) -> error("'$column' already present in dataset")
             else -> values[column] = value
