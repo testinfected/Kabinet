@@ -21,6 +21,3 @@ object ProductThat {
     fun hasDescription(description: String?) = has(Product::description, equalTo(description))
     fun hasDescription(matching: Matcher<String?>) = has(Product::description, matching)
 }
-
-
-fun hasSql(sql: String) = has(JdbcStatement<*>::toSql, equalTo(sql))

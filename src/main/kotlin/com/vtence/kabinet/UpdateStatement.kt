@@ -5,6 +5,10 @@ import java.sql.PreparedStatement
 class UpdateStatement(private val table: String, private val columnNames: List<String>) : Compilable {
     private val whereClause = SqlBuilder()
 
+    fun where(clause: String) {
+        whereClause.append(clause)
+    }
+
     fun toSql(): String = buildSql {
         append("UPDATE ")
         append(table)
@@ -17,13 +21,9 @@ class UpdateStatement(private val table: String, private val columnNames: List<S
         }
     }
 
-    override fun <T> compile(query: (PreparedStatement) -> T): JdbcStatement<T> {
-        return JdbcStatement(toSql()) {
-            it.prepareStatement(toSql()).use(query)
-        }
+    override fun <T> compile(parameters: Iterable<Any?>, query: (PreparedStatement) -> T): JdbcStatement<T> {
+        return PreparedJdbcStatement(toSql(), parameters, { it.prepareStatement(toSql()) }, query)
     }
 
-    fun where(clause: String) {
-        whereClause.append(clause)
-    }
+    override fun toString(): String = toSql()
 }

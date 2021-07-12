@@ -6,14 +6,15 @@ import java.sql.ResultSet
 
 class Script(sql: String) {
     private val statement = SqlStatement(sql)
+    private val data: MutableMap<String, Any?> = mutableMapOf()
 
-    operator fun set(name: String, value: Any?): Script {
-        statement[name] = value
-        return this
+    operator fun set(name: String, value: Any?): Script = apply {
+        data[":$name"] = value
     }
 
     fun <T> insert(executor: StatementExecutor, handleKeys: ResultSet.() -> T): T {
-        return executor.execute(statement.retrieveGeneratedKeys().compile {
+        return executor.execute(statement.retrieveGeneratedKeys().compile(parameters) {
+            it.setParameters(parameters)
             it.executeUpdate()
             it.generatedKeys.run {
                 next()
@@ -23,7 +24,8 @@ class Script(sql: String) {
     }
 
     fun <T> list(executor: StatementExecutor, hydrate: ResultSet.() -> T): List<T> {
-        return executor.execute(statement.compile {
+        return executor.execute(statement.compile(parameters) {
+            it.setParameters(parameters)
             val rs = it.executeQuery()
             val result = mutableListOf<T>()
             while (rs.next()) {
@@ -32,6 +34,8 @@ class Script(sql: String) {
             result.toList()
         })
     }
+
+    private val parameters get() = statement.parameters.map { data[it] }
 
     override fun toString(): String = statement.toSql()
 }

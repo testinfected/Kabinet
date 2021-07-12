@@ -20,6 +20,8 @@ class ScriptTest {
     val connection = database.openConnection()
     val transaction = JDBCTransactor(connection)
 
+    val recorder = StatementRecorder(connection)
+
     @BeforeTest
     fun prepareDatabase() {
         database.migrate()
@@ -34,22 +36,23 @@ class ScriptTest {
     fun `inserting and retrieving a single database row with all columns`() {
         val id = transaction {
             val bulldog = sql(
-                """
-                INSERT INTO products(number, name, description) 
-                VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')
-            """.trimIndent()
+                "INSERT INTO products(number, name, description) VALUES(:number, :name, :description)"
             )
-            bulldog.insert(connection) { id }
+            bulldog
+                .set("number", "12345678")
+                .set("name", "English Bulldog")
+                .set("description", "A muscular, heavy dog")
+                .insert(recorder) { id }
         }
+
+        recorder.assertSql(
+            "INSERT INTO products(number, name, description) VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')")
         assertThat("id", id, present())
 
         val products = sql(
-            """
-                SELECT * FROM products
-                WHERE number = :number
-            """.trimIndent()
+            "SELECT * FROM products WHERE number = :number"
         )
-        val found = products.set("number", "12345678").list(connection) {
+        val found = products.set("number", "12345678").list(recorder) {
             Product(
                 id = getInt("id"),
                 number = getString("number"),
@@ -58,6 +61,7 @@ class ScriptTest {
             )
         }
 
+        recorder.assertSql("SELECT * FROM products WHERE number = '12345678'")
         assertThat(
             "products found", found, anyElement(
                 hasId(id) and

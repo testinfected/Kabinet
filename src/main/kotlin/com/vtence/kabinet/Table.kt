@@ -19,9 +19,9 @@ open class Table(name: String): ColumnSet {
     private val _columns = mutableListOf<Column<*>>()
     override val columns: List<Column<*>> get() = _columns
 
-    fun int(name: String): Column<Int> = add(Column(this, name, IntType))
+    fun int(name: String): Column<Int> = add(Column(this, name, IntColumnType))
 
-    fun string(name: String): Column<String> = add(Column(this, name, StringType))
+    fun string(name: String): Column<String> = add(Column(this, name, StringColumnType))
 
     private fun <T> add(column: Column<T>): Column<T> = column.also { _columns += it }
 

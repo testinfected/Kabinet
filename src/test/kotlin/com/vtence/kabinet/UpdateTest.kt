@@ -37,7 +37,7 @@ class UpdateTest {
                 it[description] = "A companion for kids"
             }.execute(recorder)
         }
-        recorder.assertSql("UPDATE products SET description = ?")
+        recorder.assertSql("UPDATE products SET description = 'A companion for kids'")
         assertThat("update count", updated, equalTo(2))
 
         val records = Products.selectAll(recorder, Products.hydrate)
@@ -56,7 +56,7 @@ class UpdateTest {
                 it[name] = "Frenchie"
                 it[description] = "A miniature Bulldog"
             }.execute(recorder)
-            recorder.assertSql("UPDATE products SET name = ?, description = ? WHERE products.number = ?")
+            recorder.assertSql("UPDATE products SET name = 'Frenchie', description = 'A miniature Bulldog' WHERE products.number = '77777777'")
 
             assertThat("update count", updated, equalTo(1))
         }
@@ -80,6 +80,5 @@ class UpdateTest {
         transaction {
             Products.insert(product.record).execute(recorder)
         }
-        recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
     }
 }

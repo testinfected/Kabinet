@@ -6,7 +6,7 @@ class Update(table: Table, private val columns: List<Column<*>>, private val val
     private val parameters = mutableListOf<Any?>()
 
     override fun execute(executor: StatementExecutor): Int {
-        return executor.execute(statement.compile { update ->
+        return executor.execute(statement.compile(values.parameters + parameters) { update ->
             values(update)
             update.setParameters(parameters, offset = columns.size)
             update.executeUpdate()

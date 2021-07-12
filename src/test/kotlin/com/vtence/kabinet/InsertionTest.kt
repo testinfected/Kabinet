@@ -39,7 +39,10 @@ class InsertionTest {
                 it[name] = "English Bulldog"
             }.execute(recorder)
         }
-        recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
+        recorder.assertSql(
+            "INSERT INTO products(number, name, description) " +
+                    "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
+        )
 
         val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
@@ -62,7 +65,10 @@ class InsertionTest {
                 it[name] = "English Bulldog"
             }.execute(recorder) get id
         }
-        recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
+        recorder.assertSql(
+            "INSERT INTO products(number, name, description) " +
+                    "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
+        )
 
         val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
@@ -77,37 +83,15 @@ class InsertionTest {
         val id = transaction {
             Products.insert(bulldog.record).execute(recorder) get id
         }
-        recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
+        recorder.assertSql(
+            "INSERT INTO products(number, name, description) " +
+                    "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
+        )
 
         val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("inserted", inserted, present(hasSameStateAs(bulldog.copy(id = id))))
-    }
-
-
-    @Test
-    fun `inserting yet again, this time the old fashion way`() {
-        val id = transaction {
-            Insert.into(Products) {
-                it.setString(1, "12345678")
-                it.setString(2, "English Bulldog")
-                it.setString(3, "A muscular, heavy dog")
-            }.execute(recorder) get id
-        }
-        recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
-
-        val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
-        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
-
-        assertThat(
-            "inserted", inserted, present(
-                hasId(id) and
-                        hasNumber("12345678") and
-                        hasName("English Bulldog") and
-                        hasDescription("A muscular, heavy dog")
-            )
-        )
     }
 
     @Test
@@ -118,7 +102,9 @@ class InsertionTest {
                 it[name] = "French Bulldog"
             }.execute(recorder) get id
         }
-        recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
+        recorder.assertSql(
+            "INSERT INTO products(number, name, description) " +
+                    "VALUES('77777777', 'French Bulldog', NULL)")
 
         val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")

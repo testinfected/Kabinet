@@ -1,20 +1,19 @@
 package com.vtence.kabinet
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import java.sql.Connection
 
-class StatementRecorder(private val executor: StatementExecutor): StatementExecutor {
-    constructor(connection: Connection): this(StatementExecutor(connection))
+class StatementRecorder(private val connection: Connection): StatementExecutor {
+    private val tape: MutableList<String> = mutableListOf()
 
-    val executed: MutableList<JdbcStatement<*>> = mutableListOf()
-
-    val lastStatement: JdbcStatement<*> get() = executed.last()
+    val lastStatement: String get() = tape.last()
 
     override fun <T> execute(statement: JdbcStatement<T>): T {
-        return executor.execute(statement).also { executed += statement }
+        return statement.execute(connection).also { tape += statement.toSql(connection) }
     }
 }
 
 fun StatementRecorder.assertSql(sql: String) {
-    assertThat("generated sql", lastStatement, hasSql(sql))
+    assertThat("generated sql", lastStatement, equalTo(sql))
 }

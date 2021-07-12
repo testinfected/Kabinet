@@ -10,8 +10,8 @@ class ColumnTest {
         val name = string("name")
     }
 
-    val productName = Column(Products, "name", StringType)
-    val productNumber = Column(Products, "number", IntType)
+    val productName = Column(Products, "name", StringColumnType)
+    val productNumber = Column(Products, "number", IntColumnType)
 
     @Test
     fun `knows its fully qualified name`() {

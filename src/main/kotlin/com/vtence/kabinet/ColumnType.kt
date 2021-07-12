@@ -19,11 +19,18 @@ interface ColumnType<T> {
     }
 
     fun get(rs: ResultSet, index: Int): T?
+
+    fun toSql(value: Any?): String = when(value) {
+        null -> "NULL"
+        else -> toNonNullSql(value)
+    }
+
+    fun toNonNullSql(value: Any) = value.toString()
 }
 
 
-object StringType: ColumnType<String> {
-    override val sqlType: SQLType = JDBCType.VARCHAR
+object StringColumnType: ColumnType<String> {
+    override val sqlType = JDBCType.VARCHAR
 
     @Suppress("UNCHECKED_CAST")
     override fun nullable() = this as ColumnType<String?>
@@ -31,10 +38,16 @@ object StringType: ColumnType<String> {
     override fun get(rs: ResultSet, index: Int): String? {
         return rs.getString(index)
     }
+
+    override fun toNonNullSql(value: Any): String = buildString {
+        append('\'')
+        append(value.toString())
+        append('\'')
+    }
 }
 
 
-object IntType: ColumnType<Int> {
+object IntColumnType: ColumnType<Int> {
     override val sqlType: SQLType = JDBCType.INTEGER
 
     @Suppress("UNCHECKED_CAST")

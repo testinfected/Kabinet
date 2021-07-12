@@ -34,7 +34,7 @@ class Select(table: Table, private val columns: List<Column<*>>) : Query() {
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
 
     override fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T> {
-        return executor.execute(statement.compile { select ->
+        return executor.execute(statement.compile(parameters) { select ->
             select.setParameters(parameters)
             read(select.executeQuery(), hydrate)
         })

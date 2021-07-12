@@ -3,7 +3,9 @@ package com.vtence.kabinet
 import java.sql.PreparedStatement
 
 
-typealias DataChange = (PreparedStatement) -> Unit
+interface DataChange: (PreparedStatement) -> Unit {
+    val parameters: Iterable<Any?>
+}
 
 
 class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
@@ -15,6 +17,9 @@ class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
             else -> values[column] = value
         }
     }
+
+    override val parameters: List<Any?>
+        get() = columns.map { values[it] }
 
     override val columns: List<Column<*>>
         get() = base.ifEmpty { values.keys.toList() }

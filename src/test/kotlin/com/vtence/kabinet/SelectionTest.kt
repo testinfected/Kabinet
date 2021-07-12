@@ -109,7 +109,7 @@ class SelectionTest {
                 .list(recorder) { product }
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description FROM products " +
-                    "WHERE name = ?")
+                    "WHERE name = 'French Bulldog'")
 
         assertThat(
             "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))
@@ -119,8 +119,6 @@ class SelectionTest {
     private fun persist(product: Product): Int {
         return transaction {
             Products.insert(product.record).execute(recorder) get id
-        }.also {
-            recorder.assertSql("INSERT INTO products(number, name, description) VALUES(?, ?, ?)")
         }
     }
 }
