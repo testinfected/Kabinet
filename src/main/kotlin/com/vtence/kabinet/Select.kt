@@ -57,13 +57,15 @@ class Select(private val from: ColumnSet) : Query() {
     }
 }
 
-fun <T : Table> T.select(): Select = Select.from(this)
+fun <T : ColumnSet> T.select(): Select = Select.from(this)
 
-fun <T : Table> T.selectWhere(clause: String, vararg args: Any?): Query = select().where(clause, *args)
+fun <T : ColumnSet> T.selectAll(): Query = select()
 
-fun <T : Table, R> T.selectAll(executor: StatementExecutor, hydrate: ResultRow.() -> R): List<R> =
+fun <T : ColumnSet> T.selectWhere(clause: String, vararg args: Any?): Query = select().where(clause, *args)
+
+fun <T : ColumnSet, R> T.selectAll(executor: StatementExecutor, hydrate: ResultRow.() -> R): List<R> =
     select().list(executor, hydrate)
 
-fun <T : Table, R> T.selectAll(connection: Connection, hydrate: ResultRow.() -> R): List<R> =
+fun <T : ColumnSet, R> T.selectAll(connection: Connection, hydrate: ResultRow.() -> R): List<R> =
     selectAll(StatementExecutor(connection), hydrate)
 

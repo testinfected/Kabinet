@@ -6,6 +6,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.vtence.kabinet.ProductThat.hasName
 import com.vtence.kabinet.ProductThat.hasSameStateAs
 import com.vtence.kabinet.Products.id
+import com.vtence.kabinet.Products.name
+import com.vtence.kabinet.Products.number
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -69,7 +71,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.select().first(recorder) { product }
+        val selection = Products.selectAll().first(recorder) { product }
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products LIMIT 1")
 
         assertThat("selected", selection, present(hasName("French Bulldog")))
@@ -78,7 +80,7 @@ class SelectionTest {
     val dalmatian = Product(name = "Dalmatian", number = "55555555")
 
     @Test
-    fun `limiting the results to a subset`() {
+    fun `limiting the quantity of results`() {
         persist(lab)
         persist(frenchie)
         persist(bully)
@@ -86,7 +88,7 @@ class SelectionTest {
 
         val selection =
             Products
-                .select()
+                .selectAll()
                 .limit(2, offset = 1)
                 .list(recorder) { product }
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products LIMIT 2 OFFSET 1")
@@ -113,6 +115,23 @@ class SelectionTest {
 
         assertThat(
             "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))
+        )
+    }
+
+    @Test
+    fun `selecting only a subset of the table columns`() {
+        persist(frenchie)
+
+        val slices =
+            Products
+                .slice(number, name)
+                .selectAll(recorder) { this[number] to this[name] }
+
+        recorder.assertSql(
+            "SELECT products.number, products.name FROM products")
+
+        assertThat(
+            "slices", slices, hasElement("77777777" to "French Bulldog")
         )
     }
 
