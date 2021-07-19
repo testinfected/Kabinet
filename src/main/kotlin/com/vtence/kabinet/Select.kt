@@ -22,11 +22,13 @@ fun <T> Query.first(connection: Connection, hydrate: ResultRow.() -> T): T? =
     first(StatementExecutor(connection), hydrate)
 
 
-class Select(table: Table, private val columns: List<Column<*>>) : Query() {
-    private val statement = SelectStatement(table.tableName, columns.qualifiedNames)
+class Select(private val from: ColumnSet) : Query() {
+    private val statement = SelectStatement(from)
     private val parameters = mutableListOf<Any?>()
 
-    fun where(clause: String, vararg args: Any?): Query = apply {
+    fun where(clause: String, vararg args: Any?): Query = where(Literal(clause), *args)
+
+    fun where(clause: Expression, vararg args: Any?): Query = apply {
         statement.where(clause)
         parameters.addAll(args)
     }
@@ -43,7 +45,7 @@ class Select(table: Table, private val columns: List<Column<*>>) : Query() {
     private fun <T> read(rs: ResultSet, hydrate: ResultRow.() -> T): List<T> {
         val result = mutableListOf<T>()
         while (rs.next()) {
-            result += hydrate(ResultRow.readFrom(rs, columns))
+            result += hydrate(ResultRow.readFrom(rs, from.columns))
         }
         return result.toList()
     }
@@ -51,16 +53,11 @@ class Select(table: Table, private val columns: List<Column<*>>) : Query() {
     override fun toString(): String = statement.toSql()
 
     companion object {
-        fun from(
-            table: Table,
-            vararg columns: Column<*> = table.columns.toTypedArray(),
-        ): Select {
-            return Select(table, columns.toList())
-        }
+        fun from(columns: ColumnSet): Select = Select(columns)
     }
 }
 
-fun <T : Table> T.select(): Select = Select.from(this, *columns.toTypedArray())
+fun <T : Table> T.select(): Select = Select.from(this)
 
 fun <T : Table> T.selectWhere(clause: String, vararg args: Any?): Query = select().where(clause, *args)
 

@@ -3,15 +3,14 @@ package com.vtence.kabinet
 import java.sql.PreparedStatement
 
 class SelectStatement(
-    private val tableName: String,
-    private val columnNames: List<String>,
+    private val from: ColumnSet,
 ) : Compilable {
 
-    private var whereClause: String? = null
+    private var whereClause: Expression? = null
     private var limit: Int? = null
     private var offset: Int = 0
 
-    fun where(clause: String): SelectStatement = apply {
+    fun where(clause: Expression): SelectStatement = apply {
         whereClause = clause
     }
 
@@ -22,9 +21,13 @@ class SelectStatement(
 
     fun toSql(): String = buildSql {
         append("SELECT ")
-        columnNames.join { append(it) }
-        append(" FROM ").append(tableName)
-        whereClause?.let { append(" WHERE ").append(it) }
+        from.columns.join { +it }
+        append(" FROM ")
+        +from
+        whereClause?.let {
+            append(" WHERE ")
+            +it
+        }
         limit?.let { count ->
             append(" LIMIT ").appendValue(count)
             offset.takeUnless { it == 0 }?.let { append(" OFFSET ").appendValue(it) }

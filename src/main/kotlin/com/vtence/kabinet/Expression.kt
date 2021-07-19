@@ -1,6 +1,20 @@
 package com.vtence.kabinet
 
 
+fun interface Expression {
+    fun appendTo(sql: SqlBuilder)
+}
+
+
+class Literal(private val value: String): Expression {
+    override fun appendTo(sql: SqlBuilder) {
+        sql.append(value)
+    }
+}
+
+fun lit(value: String) = Literal(value)
+
+
 fun buildSql(body: SqlBuilder.() -> Unit): String {
     return SqlBuilder().apply(body).toString()
 }
@@ -12,6 +26,8 @@ class SqlBuilder {
     fun append(value: String): SqlBuilder = apply { sql.append(value) }
 
     fun appendValue(value: Int): SqlBuilder = apply { sql.append(value) }
+
+    fun append(expr: Expression): SqlBuilder = apply(expr::appendTo)
 
     fun <T> Iterable<T>.join(
         separator: CharSequence = ", ",
@@ -27,11 +43,10 @@ class SqlBuilder {
         sql.append(postfix)
     }
 
-    fun isNotEmpty(): Boolean = sql.isNotEmpty()
+    operator fun Expression.unaryPlus(): SqlBuilder = append(this@unaryPlus)
 
     override fun toString(): String = sql.toString()
 }
-
 
 fun SqlBuilder.append(sql: SqlBuilder): SqlBuilder = append(sql.toString())
 

@@ -1,21 +1,23 @@
 package com.vtence.kabinet
 
 
-class Update(table: Table, private val columns: List<Column<*>>, private val values: DataChange) : Command {
-    private val statement = UpdateStatement(table.tableName, columns.names)
+class Update(private val set: ColumnSet, private val values: DataChange) : Command {
+    private val statement = UpdateStatement(set)
     private val parameters = mutableListOf<Any?>()
 
     override fun execute(executor: StatementExecutor): Int {
         return executor.execute(statement.compile(values.parameters + parameters) { update ->
             values(update)
-            update.setParameters(parameters, offset = columns.size)
+            update.setParameters(parameters, offset = set.columns.size)
             update.executeUpdate()
         })
     }
 
     override fun toString(): String = statement.toSql()
 
-    fun where(condition: String, vararg params: Any?): Command {
+    fun where(condition: String, vararg params: Any?): Command = where(lit(condition), *params)
+
+    fun where(condition: Expression, vararg params: Any?): Command {
         statement.where(condition)
         parameters.addAll(params)
         return this
@@ -23,11 +25,10 @@ class Update(table: Table, private val columns: List<Column<*>>, private val val
 
     companion object {
         fun set(
-            table: Table,
-            vararg columns: Column<*> = table.columns.toTypedArray(),
+            columns: ColumnSet,
             values: DataChange
         ): Update {
-            return Update(table, columns.toList(), values)
+            return Update(columns, values)
         }
     }
 }
@@ -35,7 +36,7 @@ class Update(table: Table, private val columns: List<Column<*>>, private val val
 
 fun <T : Table> T.update(record: T.(Dataset) -> Unit): Update {
     val change = Dataset.opened().apply { record(this) }
-    return Update.set(this, columns = change.columns.toTypedArray(), values = change)
+    return Update.set(slice(change.columns), values = change)
 }
 
 fun <T : Table> T.updateWhere(condition: String, vararg params: Any?, record: T.(Dataset) -> Unit): Command =

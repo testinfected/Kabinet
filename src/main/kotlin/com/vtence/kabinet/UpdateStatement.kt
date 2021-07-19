@@ -2,22 +2,24 @@ package com.vtence.kabinet
 
 import java.sql.PreparedStatement
 
-class UpdateStatement(private val table: String, private val columnNames: List<String>) : Compilable {
-    private val whereClause = SqlBuilder()
+class UpdateStatement(private val set: ColumnSet) : Compilable {
+    private var whereClause: Expression? = null
 
-    fun where(clause: String) {
-        whereClause.append(clause)
+    fun where(clause: Expression) {
+        whereClause = clause
     }
 
     fun toSql(): String = buildSql {
         append("UPDATE ")
-        append(table)
+        +set
         append(" SET ")
-        columnNames.join {
-            append(it).append(" = ?")
+        set.columns.join {
+            +it.unqualified()
+            append(" = ?")
         }
-        if (whereClause.isNotEmpty()) {
-            append(" WHERE ").append(whereClause)
+        whereClause?.let {
+            append(" WHERE ")
+            +it
         }
     }
 

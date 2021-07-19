@@ -8,7 +8,7 @@ interface DataChange: (PreparedStatement) -> Unit {
 }
 
 
-class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
+class Dataset(private val base: List<Column<*>>): DataChange {
     private val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     operator fun <V> set(column: Column<V>, value: V) {
@@ -21,7 +21,7 @@ class Dataset(private val base: List<Column<*>>): DataChange, ColumnSet {
     override val parameters: List<Any?>
         get() = columns.map { values[it] }
 
-    override val columns: List<Column<*>>
+    val columns: List<Column<*>>
         get() = base.ifEmpty { values.keys.toList() }
 
     override operator fun invoke(statement: PreparedStatement) {
