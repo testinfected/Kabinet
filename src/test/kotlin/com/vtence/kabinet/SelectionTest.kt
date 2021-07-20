@@ -135,6 +135,24 @@ class SelectionTest {
         )
     }
 
+    @Test
+    fun `slicing using a literal expression`() {
+        persist(frenchie)
+        persist(lab)
+        persist(dalmatian)
+
+        val count = Literal("count(*)", IntColumnType)
+
+        val expr =
+            Products
+                .slice(count)
+                .selectFirst(recorder) { this[count] }
+
+        recorder.assertSql("SELECT count(*) FROM products LIMIT 1")
+
+        assertThat("expr", expr, equalTo(3))
+    }
+
     private fun persist(product: Product): Int {
         return transaction {
             Products.insert(product.record).execute(recorder) get id

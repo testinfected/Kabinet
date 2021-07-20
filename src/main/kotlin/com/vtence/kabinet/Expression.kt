@@ -6,19 +6,6 @@ fun interface Expression {
 }
 
 
-class Literal(private val value: String): Expression {
-    override fun appendTo(sql: SqlBuilder) {
-        sql.append(value)
-    }
-}
-
-fun lit(value: String) = Literal(value)
-
-
-fun buildSql(body: SqlBuilder.() -> Unit): String {
-    return SqlBuilder().apply(body).toString()
-}
-
 class SqlBuilder {
 
     private val sql = StringBuilder()
@@ -50,3 +37,7 @@ class SqlBuilder {
 
 fun SqlBuilder.append(sql: SqlBuilder): SqlBuilder = append(sql.toString())
 
+
+fun buildSql(body: SqlBuilder.() -> Unit): String {
+    return SqlBuilder().apply(body).toString()
+}

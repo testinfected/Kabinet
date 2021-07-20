@@ -15,7 +15,7 @@ class Update(private val set: ColumnSet, private val values: DataChange) : Comma
 
     override fun toString(): String = statement.toSql()
 
-    fun where(condition: String, vararg params: Any?): Command = where(lit(condition), *params)
+    fun where(condition: String, vararg params: Any?): Command = where(predicate(condition), *params)
 
     fun where(condition: Expression, vararg params: Any?): Command {
         statement.where(condition)

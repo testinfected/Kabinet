@@ -15,23 +15,23 @@ class KeySet(private val rows: List<ResultRow>) {
 }
 
 
-class ResultRow(private val fields: Map<Column<*>, Int>) {
+class ResultRow(private val fields: Map<Field<*>, Int>) {
     private val data = arrayOfNulls<Any?>(fields.size)
 
-    operator fun <T> get(column: Column<T>): T {
-        val index = fields[column] ?: error("'$column' not in result set")
+    operator fun <T> get(field: Field<T>): T {
+        val index = fields[field] ?: error("'$field' not in result set")
         val value = data[index]
-        if (value == null && !column.nullable) error("'$column' is null in result set")
+        if (value == null && field is Column<*> && !field.nullable) error("'$field' is null in result set")
         @Suppress("UNCHECKED_CAST")
         return value as T
     }
 
     companion object {
-        fun readFrom(rs: ResultSet, columns: List<Column<*>>): ResultRow {
-            val fields = columns.mapIndexed { index, col -> col to index }.toMap()
+        fun readFrom(rs: ResultSet, fields: List<Field<*>>): ResultRow {
+            val indices = fields.mapIndexed { index, col -> col to index }.toMap()
 
-            return ResultRow(fields).apply {
-                fields.forEach { (field, index) ->
+            return ResultRow(indices).apply {
+                indices.forEach { (field, index) ->
                     val value = field.get(rs, index + 1)
                     data[index] = value
                 }
@@ -41,10 +41,10 @@ class ResultRow(private val fields: Map<Column<*>, Int>) {
 }
 
 
-fun ResultSet.read(columns: List<Column<*>>): List<ResultRow> {
+fun ResultSet.read(fields: List<Field<*>>): List<ResultRow> {
     val results = mutableListOf<ResultRow>()
     while (next()) {
-        results += ResultRow.readFrom(this, columns = columns)
+        results += ResultRow.readFrom(this, fields)
     }
     return results.toList()
 }

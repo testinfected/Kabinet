@@ -35,7 +35,7 @@ class SelectStatementTest {
 
     @Test
     fun `supports where conditions`() {
-        val select = SelectStatement(Products).where(lit("a = ? AND b = ?"))
+        val select = SelectStatement(Products).where(predicate("a = ? AND b = ?"))
 
         assertThat(select.toSql(), equalTo(
             "SELECT products.id, products.number, products.name, products.description FROM products WHERE a = ? AND b = ?"

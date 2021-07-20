@@ -3,7 +3,7 @@ package com.vtence.kabinet
 import java.sql.PreparedStatement
 
 class SelectStatement(
-    private val from: ColumnSet,
+    private val from: FieldSet,
 ) : Compilable {
 
     private var whereClause: Expression? = null
@@ -21,9 +21,9 @@ class SelectStatement(
 
     fun toSql(): String = buildSql {
         append("SELECT ")
-        from.columns.join { +it }
+        from.fields.join { +it }
         append(" FROM ")
-        +from
+        +from.source
         whereClause?.let {
             append(" WHERE ")
             +it
