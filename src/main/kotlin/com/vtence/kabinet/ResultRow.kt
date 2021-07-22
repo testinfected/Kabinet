@@ -31,7 +31,7 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
         data[index] = value
     }
 
-    fun rebase(alias: Alias<*>): ResultRow {
+    fun rebase(alias: TableAlias<*>): ResultRow {
         val mapping = fields.mapNotNull { (field, _) ->
             val column = field as? Column<*>
             val value = this[field]
