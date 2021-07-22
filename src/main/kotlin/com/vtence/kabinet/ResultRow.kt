@@ -26,17 +26,41 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
         return value as T
     }
 
+    operator fun <T> set(field: Field<out T>, value: T) {
+        val index = fields[field] ?: error("$field is not in record set")
+        data[index] = value
+    }
+
+    fun rebase(alias: Alias<*>): ResultRow {
+        val mapping = fields.mapNotNull { (field, _) ->
+            val column = field as? Column<*>
+            val value = this[field]
+            val original = column?.let { alias.originalColumn(it) }
+            when {
+                original != null -> original to value
+                column?.table == alias.delegate -> null
+                else -> field to value
+            }
+        }.toMap()
+
+        return createFrom(mapping)
+    }
+
     companion object {
         fun readFrom(rs: ResultSet, fields: List<Field<*>>): ResultRow {
             val indices = fields.mapIndexed { index, col -> col to index }.toMap()
 
-            return ResultRow(indices).apply {
+            return ResultRow(indices).also { row ->
                 indices.forEach { (field, index) ->
-                    val value = field.get(rs, index + 1)
-                    data[index] = value
+                    row[field] = field.get(rs, index + 1)
                 }
             }
         }
+
+        fun createFrom(data: Map<Field<*>, Any?>): ResultRow =
+            ResultRow(data.keys.mapIndexed { index, field -> field to index }.toMap()).also { row ->
+                data.forEach { (field, value) -> row[field] = value }
+            }
     }
 }
 

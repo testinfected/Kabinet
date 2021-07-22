@@ -28,7 +28,7 @@ interface ColumnType<T> {
     fun toNonNullSql(value: Any) = value.toString()
 }
 
-
+//todo
 object ObjectColumnType: ColumnType<Any> {
     override val sqlType = JDBCType.JAVA_OBJECT
 

@@ -43,7 +43,7 @@ class SelectionTest {
     }
 
     val bully = Product(number = "12345678", name = "English Bulldog", description = "A heavy, muscular dog")
-    val lab = Product(name = "Labrador retriever", number = "33333333")
+    val lab = Product(name = "Labrador Retriever", number = "33333333")
 
     @Test
     fun `selecting all records from a table`() {
@@ -60,7 +60,7 @@ class SelectionTest {
             anyElement(hasName("French Bulldog")) and
                     anyElement(hasName("English Bulldog")) and
                     anyElement(
-                        hasName("Labrador retriever")
+                        hasName("Labrador Retriever")
                     )
         )
     }
@@ -111,7 +111,8 @@ class SelectionTest {
                 .list(recorder) { product }
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description FROM products " +
-                    "WHERE name = 'French Bulldog'")
+                    "WHERE name = 'French Bulldog'"
+        )
 
         assertThat(
             "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))
@@ -128,7 +129,8 @@ class SelectionTest {
                 .selectAll(recorder) { this[number] to this[name] }
 
         recorder.assertSql(
-            "SELECT products.number, products.name FROM products")
+            "SELECT products.number, products.name FROM products"
+        )
 
         assertThat(
             "slices", slices, hasElement("77777777" to "French Bulldog")
@@ -151,6 +153,26 @@ class SelectionTest {
         recorder.assertSql("SELECT count(*) FROM products LIMIT 1")
 
         assertThat("expr", expr, equalTo(3))
+    }
+
+    @Test
+    fun `aliasing the table name`() {
+        persist(frenchie)
+        persist(dalmatian)
+        persist(lab)
+
+        val selection = Products.alias("p").let { p ->
+            p.selectWhere("p.name = ?", "Labrador Retriever")
+                .list(recorder) { rebase(p).product }
+        }
+
+        recorder.assertSql(
+            "SELECT p.id, p.number, p.name, p.description " +
+                    "FROM products AS p WHERE p.name = 'Labrador Retriever'"
+        )
+
+        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
     }
 
     private fun persist(product: Product): Int {

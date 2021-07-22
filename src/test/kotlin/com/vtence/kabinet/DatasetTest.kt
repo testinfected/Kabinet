@@ -20,7 +20,7 @@ class DatasetTest {
         closedSet[number] = "77777777"
         closedSet[name] = "French Bulldog"
 
-        assertThat({ closedSet[number] = "66666666" }, throws(isA<Exception>()))
+        assertThat({ closedSet[number] = "66666666" }, throws<IllegalStateException>())
     }
 
     @Test
