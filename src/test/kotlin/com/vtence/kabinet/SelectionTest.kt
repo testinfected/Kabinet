@@ -16,7 +16,7 @@ class SelectionTest {
 
     val database = Database.inMemory()
     val connection = database.openConnection()
-    val transaction = JDBCTransactor(connection)
+    val transaction = JdbcTransactor(connection)
 
     val recorder = StatementRecorder(connection)
 
@@ -30,7 +30,7 @@ class SelectionTest {
         connection.close()
     }
 
-    val frenchie = Product(number = "77777777", name = "French Bulldog", description = "A cute, family dog")
+    val frenchie = Product(number = 77777777, name = "French Bulldog", description = "A cute, family dog")
 
     @Test
     fun `retrieving a record from a table`() {
@@ -42,8 +42,8 @@ class SelectionTest {
         assertThat("record", records, anyElement(hasSameStateAs(frenchie.copy(id = id))))
     }
 
-    val bully = Product(number = "12345678", name = "English Bulldog", description = "A heavy, muscular dog")
-    val lab = Product(name = "Labrador Retriever", number = "33333333")
+    val bully = Product(number = 12345678, name = "English Bulldog", description = "A heavy, muscular dog")
+    val lab = Product(name = "Labrador Retriever", number = 33333333)
 
     @Test
     fun `selecting all records from a table`() {
@@ -77,7 +77,7 @@ class SelectionTest {
         assertThat("selected", selection, present(hasName("French Bulldog")))
     }
 
-    val dalmatian = Product(name = "Dalmatian", number = "55555555")
+    val dalmatian = Product(name = "Dalmatian", number = 55555555)
 
     @Test
     fun `limiting the quantity of results`() {
@@ -133,7 +133,7 @@ class SelectionTest {
         )
 
         assertThat(
-            "slices", slices, hasElement("77777777" to "French Bulldog")
+            "slices", slices, hasElement(77777777 to "French Bulldog")
         )
     }
 

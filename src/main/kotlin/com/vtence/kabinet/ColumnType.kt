@@ -6,30 +6,34 @@ import java.sql.ResultSet
 import java.sql.SQLType
 
 
-interface ColumnType<T> {
-    val sqlType: SQLType
+abstract class ColumnType<T> {
+    abstract val sqlType: SQLType
 
-    fun nullable(): ColumnType<T?>
+    abstract fun nullable(): ColumnType<T?>
 
-    fun set(statement: PreparedStatement, index: Int, value: Any?) {
+    open fun set(statement: PreparedStatement, index: Int, value: Any?) {
         if (value != null)
             statement.setObject(index, value, sqlType.vendorTypeNumber)
         else
             statement.setNull(index, sqlType.vendorTypeNumber)
     }
 
-    fun get(rs: ResultSet, index: Int): T?
+    abstract fun get(rs: ResultSet, index: Int): T?
 
-    fun toSql(value: Any?): String = when(value) {
+    fun toSql(value: Any?): String = when (value) {
         null -> "NULL"
         else -> toNonNullSql(value)
     }
 
-    fun toNonNullSql(value: Any) = value.toString()
+    open fun toNonNullSql(value: Any) = value.toString()
+
+    override fun toString(): String {
+        return sqlType.name
+    }
 }
 
-//todo
-object ObjectColumnType: ColumnType<Any> {
+
+object ObjectColumnType : ColumnType<Any>() {
     override val sqlType = JDBCType.JAVA_OBJECT
 
     @Suppress("UNCHECKED_CAST")
@@ -39,19 +43,17 @@ object ObjectColumnType: ColumnType<Any> {
         return rs.getObject(index)
     }
 
-    override fun toNonNullSql(value: Any): String = buildString {
-        when (value) {
-            is String -> StringColumnType.toNonNullSql(value)
-            is Boolean -> BooleanColumnType.toNonNullSql(value)
-            is Int, Long -> IntColumnType.toNonNullSql(value)
-            // TODO
-            else -> append(value.toString())
-        }
+    override fun toNonNullSql(value: Any): String = when (value) {
+        is String -> StringColumnType.toNonNullSql(value)
+        is Boolean -> BooleanColumnType.toNonNullSql(value)
+        is Int, Long -> IntColumnType.toNonNullSql(value)
+        // TODO
+        else -> value.toString()
     }
 }
 
 
-object BooleanColumnType: ColumnType<Boolean> {
+object BooleanColumnType : ColumnType<Boolean>() {
     override val sqlType = JDBCType.BOOLEAN
 
     @Suppress("UNCHECKED_CAST")
@@ -64,7 +66,7 @@ object BooleanColumnType: ColumnType<Boolean> {
 }
 
 
-object StringColumnType: ColumnType<String> {
+object StringColumnType : ColumnType<String>() {
     override val sqlType = JDBCType.VARCHAR
 
     @Suppress("UNCHECKED_CAST")
@@ -76,13 +78,13 @@ object StringColumnType: ColumnType<String> {
 
     override fun toNonNullSql(value: Any): String = buildString {
         append('\'')
-        append(value.toString())
+        append((value as String).replace("'", "''"))
         append('\'')
     }
 }
 
 
-object IntColumnType: ColumnType<Int> {
+object IntColumnType : ColumnType<Int>() {
     override val sqlType: SQLType = JDBCType.INTEGER
 
     @Suppress("UNCHECKED_CAST")

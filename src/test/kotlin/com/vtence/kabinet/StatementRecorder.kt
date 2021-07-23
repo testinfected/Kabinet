@@ -10,7 +10,7 @@ class StatementRecorder(private val connection: Connection): StatementExecutor {
     val lastStatement: String get() = tape.last()
 
     override fun <T> execute(statement: JdbcStatement<T>): T {
-        return statement.execute(connection).also { tape += statement.toSql(connection) }
+        return statement.execute(connection).also { tape += statement.toSql() }
     }
 }
 

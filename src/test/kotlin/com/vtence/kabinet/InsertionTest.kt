@@ -16,7 +16,7 @@ import kotlin.test.*
 class InsertionTest {
     val database = Database.inMemory()
     val connection = database.openConnection()
-    val transaction = JDBCTransactor(connection)
+    val transaction = JdbcTransactor(connection)
 
     val recorder = StatementRecorder(connection)
 
@@ -34,14 +34,14 @@ class InsertionTest {
     fun `inserting a new record`() {
         transaction {
             Products.insert {
-                it[number] = "12345678"
+                it[number] = 12345678
                 it[description] = "A muscular, heavy dog"
                 it[name] = "English Bulldog"
             }.execute(recorder)
         }
         recorder.assertSql(
             "INSERT INTO products(number, name, description) " +
-                    "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
+                    "VALUES(12345678, 'English Bulldog', 'A muscular, heavy dog')"
         )
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
@@ -49,7 +49,7 @@ class InsertionTest {
 
         assertThat(
             "inserted", inserted, present(
-                hasNumber("12345678") and
+                hasNumber(12345678) and
                         hasName("English Bulldog") and
                         hasDescription("A muscular, heavy dog")
             )
@@ -60,14 +60,14 @@ class InsertionTest {
     fun `retrieving the generated keys`() {
         val id = transaction {
             Products.insert {
-                it[number] = "12345678"
+                it[number] = 12345678
                 it[description] = "A muscular, heavy dog"
                 it[name] = "English Bulldog"
             }.execute(recorder) get id
         }
         recorder.assertSql(
             "INSERT INTO products(number, name, description) " +
-                    "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
+                    "VALUES(12345678, 'English Bulldog', 'A muscular, heavy dog')"
         )
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
@@ -76,7 +76,7 @@ class InsertionTest {
         assertThat("inserted", inserted, present(hasId(id)))
     }
 
-    val bulldog = Product(number = "12345678", name = "English Bulldog", description = "A muscular, heavy dog")
+    val bulldog = Product(number = 12345678, name = "English Bulldog", description = "A muscular, heavy dog")
 
     @Test
     fun `inserting again, this time using a record definition`() {
@@ -85,7 +85,7 @@ class InsertionTest {
         }
         recorder.assertSql(
             "INSERT INTO products(number, name, description) " +
-                    "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
+                    "VALUES(12345678, 'English Bulldog', 'A muscular, heavy dog')"
         )
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
@@ -98,13 +98,13 @@ class InsertionTest {
     fun `omitting nullable columns`() {
         val id = transaction {
             Products.insert {
-                it[number] = "77777777"
+                it[number] = 77777777
                 it[name] = "French Bulldog"
             }.execute(recorder) get id
         }
         recorder.assertSql(
             "INSERT INTO products(number, name, description) " +
-                    "VALUES('77777777', 'French Bulldog', NULL)")
+                    "VALUES(77777777, 'French Bulldog', NULL)")
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
@@ -113,7 +113,7 @@ class InsertionTest {
             "inserted", inserted,
             present(
                 hasId(id) and
-                        hasNumber("77777777") and
+                        hasNumber(77777777) and
                         hasName("French Bulldog") and
                         hasDescription(absent())
             )

@@ -2,26 +2,23 @@ package com.vtence.kabinet
 
 
 class Update(private val set: ColumnSet, private val values: DataChange) : Command {
-    private val statement = UpdateStatement(set)
-    private val parameters = mutableListOf<Any?>()
+    private val statement = UpdateStatement(set, values.values)
+
+    fun where(condition: String, vararg params: Any?): Command =
+        where(PreparedExpression(condition, params.toList()))
+
+    fun where(condition: Expression): Command {
+        statement.where(condition)
+        return this
+    }
 
     override fun execute(executor: StatementExecutor): Int {
-        return executor.execute(statement.compile(values.parameters + parameters) { update ->
-            values(update)
-            update.setParameters(parameters, offset = set.columns.size)
+        return executor.execute(statement.prepare { update ->
             update.executeUpdate()
         })
     }
 
-    override fun toString(): String = statement.toSql()
-
-    fun where(condition: String, vararg params: Any?): Command = where(predicate(condition), *params)
-
-    fun where(condition: Expression, vararg params: Any?): Command {
-        statement.where(condition)
-        parameters.addAll(params)
-        return this
-    }
+    override fun toString(): String = statement.asSql()
 
     companion object {
         fun set(

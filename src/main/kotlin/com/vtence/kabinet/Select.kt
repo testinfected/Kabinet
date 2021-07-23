@@ -6,20 +6,19 @@ import java.sql.ResultSet
 
 class Select(private val from: FieldSet) : Query() {
     private val statement = SelectStatement(from)
-    private val parameters = mutableListOf<Any?>()
 
-    fun where(clause: String, vararg args: Any?): Query = where(Literal(clause, BooleanColumnType), *args)
+    fun where(clause: String, vararg args: Any?): Query =
+        where(PreparedExpression(clause, args.toList()))
 
-    fun where(clause: Expression, vararg args: Any?): Query = apply {
+
+    fun where(clause: Expression): Query = apply {
         statement.where(clause)
-        parameters.addAll(args)
     }
 
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
 
     override fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T> {
-        return executor.execute(statement.compile(parameters) { select ->
-            select.setParameters(parameters)
+        return executor.execute(statement.prepare { select ->
             read(select.executeQuery(), hydrate)
         })
     }
@@ -32,7 +31,7 @@ class Select(private val from: FieldSet) : Query() {
         return result.toList()
     }
 
-    override fun toString(): String = statement.toSql()
+    override fun toString(): String = statement.asSql()
 
     companion object {
         fun from(fields: FieldSet): Select = Select(fields)
@@ -43,7 +42,8 @@ fun <T : FieldSet> T.select(): Select = Select.from(this)
 
 fun <T : FieldSet> T.selectAll(): Query = select()
 
-fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query = select().where(clause, *args)
+fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query =
+    select().where(clause, *args)
 
 fun <T : FieldSet, R> T.selectAll(executor: StatementExecutor, hydrate: ResultRow.() -> R): List<R> =
     select().list(executor, hydrate)

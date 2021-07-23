@@ -1,6 +1,6 @@
 data class Product(
     val id: Int? = null,
-    val number: String,
+    val number: Int,
     var name: String,
     var description: String? = null
 ) {

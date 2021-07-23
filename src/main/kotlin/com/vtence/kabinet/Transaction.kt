@@ -8,7 +8,7 @@ interface Transactor {
     operator fun <T> invoke(work: UnitOfWork<T>): T
 }
 
-class JDBCTransactor(private val connection: Connection) : Transactor {
+class JdbcTransactor(private val connection: Connection) : Transactor {
     override fun <T> invoke(work: UnitOfWork<T>): T {
         try {
             return work().also { connection.commit() }

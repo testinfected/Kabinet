@@ -14,11 +14,11 @@ import java.sql.ResultSet
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
-class ScriptTest {
+class PlainSqlTest {
 
     val database = Database.inMemory()
     val connection = database.openConnection()
-    val transaction = JDBCTransactor(connection)
+    val transaction = JdbcTransactor(connection)
 
     val recorder = StatementRecorder(connection)
 
@@ -55,7 +55,7 @@ class ScriptTest {
         val found = products.set("number", "12345678").list(recorder) {
             Product(
                 id = getInt("id"),
-                number = getString("number"),
+                number = getInt("number"),
                 name = getString("name"),
                 description = getString("description"),
             )
@@ -65,7 +65,7 @@ class ScriptTest {
         assertThat(
             "products found", found, anyElement(
                 hasId(id) and
-                        hasNumber("12345678") and
+                        hasNumber(12345678) and
                         hasName("English Bulldog") and
                         hasDescription("A muscular, heavy dog")
             )

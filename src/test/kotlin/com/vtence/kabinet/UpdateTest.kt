@@ -13,7 +13,7 @@ import kotlin.test.Test
 class UpdateTest {
     val database = Database.inMemory()
     val connection = database.openConnection()
-    val transaction = JDBCTransactor(connection)
+    val transaction = JdbcTransactor(connection)
 
     val recorder = StatementRecorder(connection)
 
@@ -29,8 +29,8 @@ class UpdateTest {
 
     @Test
     fun `updating all records partially`() {
-        persist(Product(number = "11111111", name = "English Bulldog"))
-        persist(Product(number = "77777777", name = "French Bulldog"))
+        persist(Product(number = 11111111, name = "English Bulldog"))
+        persist(Product(number = 77777777, name = "French Bulldog"))
 
         val updated: Int = transaction {
             Products.update {
@@ -48,15 +48,15 @@ class UpdateTest {
 
     @Test
     fun `updating a specific existing record`() {
-        persist(Product(number = "11111111", name = "English Bulldog"))
-        persist(Product(number = "77777777", name = "French Bulldog"))
+        persist(Product(number = 11111111, name = "English Bulldog"))
+        persist(Product(number = 77777777, name = "French Bulldog"))
 
         transaction {
-            val updated: Int = Products.updateWhere("$number = ?", "77777777") {
+            val updated: Int = Products.updateWhere("$number = ?", 77777777) {
                 it[name] = "Frenchie"
                 it[description] = "A miniature Bulldog"
             }.execute(recorder)
-            recorder.assertSql("UPDATE products SET name = 'Frenchie', description = 'A miniature Bulldog' WHERE products.number = '77777777'")
+            recorder.assertSql("UPDATE products SET name = 'Frenchie', description = 'A miniature Bulldog' WHERE products.number = 77777777")
 
             assertThat("update count", updated, equalTo(1))
         }
@@ -66,12 +66,12 @@ class UpdateTest {
 
         assertThat(
             "updated record", records, anyElement(
-                hasDescription("A miniature Bulldog") and hasNumber("77777777")
+                hasDescription("A miniature Bulldog") and hasNumber(77777777)
             )
         )
         assertThat(
             "original record", records, anyElement(
-                hasDescription(absent()) and hasNumber("11111111")
+                hasDescription(absent()) and hasNumber(11111111)
             )
         )
     }
