@@ -16,22 +16,20 @@ object Items : Table("items") {
 }
 
 
-fun dehydrate(product: Product): Products.(Dataset) -> Unit = {
+private fun dehydrate(product: Product): Products.(Dataset) -> Unit = {
     it[number] = product.number
     it[description] = product.description
     it[name] = product.name
 }
 
-val Products.hydrate: ResultRow.() -> Product
-    get() = {
-        Product(
-            id = this[id],
-            number = this[number],
-            name = this[name],
-            description = this[description]
-        )
-    }
-
+private fun Products.hydrate(row: ResultRow): Product {
+    return Product(
+        id = row[id],
+        number = row[number],
+        name = row[name],
+        description = row[description]
+    )
+}
 
 val Product.record: Products.(Dataset) -> Unit
     get() = dehydrate(this)

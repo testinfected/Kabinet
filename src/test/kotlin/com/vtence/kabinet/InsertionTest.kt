@@ -44,7 +44,7 @@ class InsertionTest {
                     "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
         )
 
-        val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
+        val inserted = Products.selectAll(recorder) { product }.singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat(
@@ -70,7 +70,7 @@ class InsertionTest {
                     "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
         )
 
-        val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
+        val inserted = Products.selectAll(recorder) { product }.singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("inserted", inserted, present(hasId(id)))
@@ -88,7 +88,7 @@ class InsertionTest {
                     "VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')"
         )
 
-        val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
+        val inserted = Products.selectAll(recorder) { product }.singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("inserted", inserted, present(hasSameStateAs(bulldog.copy(id = id))))
@@ -106,7 +106,7 @@ class InsertionTest {
             "INSERT INTO products(number, name, description) " +
                     "VALUES('77777777', 'French Bulldog', NULL)")
 
-        val inserted = Products.selectAll(recorder, Products.hydrate).singleOrNull()
+        val inserted = Products.selectAll(recorder) { product }.singleOrNull()
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat(
