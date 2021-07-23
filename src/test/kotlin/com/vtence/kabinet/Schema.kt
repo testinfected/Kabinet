@@ -38,3 +38,5 @@ val Product.record: Products.(Dataset) -> Unit
 
 val ResultRow.product: Product
     get() = Products.hydrate(this)
+
+fun ResultRow.product(alias: String): Product = rebase(Products.alias(alias)).product

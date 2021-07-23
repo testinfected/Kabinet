@@ -161,10 +161,11 @@ class SelectionTest {
         persist(dalmatian)
         persist(lab)
 
-        val selection = Products.alias("p").let { p ->
-            p.selectWhere("p.name = ?", "Labrador Retriever")
-                .list(recorder) { rebase(p).product }
-        }
+        val selection =
+            Products
+                .alias("p")
+                .selectWhere("p.name = ?", "Labrador Retriever")
+                .list(recorder) { product("p") }
 
         recorder.assertSql(
             "SELECT p.id, p.number, p.name, p.description " +
