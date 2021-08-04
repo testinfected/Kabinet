@@ -1,7 +1,7 @@
 package com.vtence.kabinet
 
 
-class Update(private val set: ColumnSet, private val values: DataChange) : Command {
+class Update(set: ColumnSet, values: DataChange) : Command {
     private val statement = UpdateStatement(set, values.values)
 
     fun where(condition: String, vararg params: Any?): Command =

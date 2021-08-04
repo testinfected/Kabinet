@@ -10,7 +10,6 @@ class Select(private val from: FieldSet) : Query() {
     fun where(clause: String, vararg args: Any?): Query =
         where(PreparedExpression(clause, args.toList()))
 
-
     fun where(clause: Expression): Query = apply {
         statement.where(clause)
     }

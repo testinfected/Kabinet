@@ -1,6 +1,5 @@
 package com.vtence.kabinet
 
-import Product
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import com.vtence.kabinet.ProductThat.hasDescription
@@ -37,13 +36,14 @@ class UpdateTest {
                 it[description] = "A companion for kids"
             }.execute(recorder)
         }
-        recorder.assertSql("UPDATE products SET description = 'A companion for kids'")
+
         assertThat("update count", updated, equalTo(2))
+        recorder.assertSql("UPDATE products SET description = 'A companion for kids'")
 
         val records = Products.selectAll(recorder) { product }
-        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("updated products", records, allElements(hasDescription("A companion for kids")))
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
 
     @Test
@@ -56,13 +56,12 @@ class UpdateTest {
                 it[name] = "Frenchie"
                 it[description] = "A miniature Bulldog"
             }.execute(recorder)
-            recorder.assertSql("UPDATE products SET name = 'Frenchie', description = 'A miniature Bulldog' WHERE products.number = 77777777")
 
             assertThat("update count", updated, equalTo(1))
+            recorder.assertSql("UPDATE products SET name = 'Frenchie', description = 'A miniature Bulldog' WHERE products.number = 77777777")
         }
 
         val records = Products.selectAll(recorder) { product }
-        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat(
             "updated record", records, anyElement(
@@ -74,6 +73,8 @@ class UpdateTest {
                 hasDescription(absent()) and hasNumber(11111111)
             )
         )
+
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
 
     private fun persist(product: Product) {

@@ -1,6 +1,5 @@
 package com.vtence.kabinet
 
-import Product
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -45,7 +44,6 @@ class InsertionTest {
         )
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
-        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat(
             "inserted", inserted, present(
@@ -54,6 +52,8 @@ class InsertionTest {
                         hasDescription("A muscular, heavy dog")
             )
         )
+
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
 
     @Test
@@ -71,9 +71,10 @@ class InsertionTest {
         )
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
-        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("inserted", inserted, present(hasId(id)))
+
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
 
     val bulldog = Product(number = 12345678, name = "English Bulldog", description = "A muscular, heavy dog")
@@ -89,9 +90,10 @@ class InsertionTest {
         )
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
-        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat("inserted", inserted, present(hasSameStateAs(bulldog.copy(id = id))))
+
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
 
     @Test
@@ -107,7 +109,6 @@ class InsertionTest {
                     "VALUES(77777777, 'French Bulldog', NULL)")
 
         val inserted = Products.selectAll(recorder) { product }.singleOrNull()
-        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
 
         assertThat(
             "inserted", inserted,
@@ -118,5 +119,7 @@ class InsertionTest {
                         hasDescription(absent())
             )
         )
+
+        recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
 }

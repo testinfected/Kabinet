@@ -1,6 +1,5 @@
 package com.vtence.kabinet
 
-import Product
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.equalTo

@@ -1,5 +1,6 @@
 package com.vtence.kabinet
 
+import java.math.BigDecimal
 import java.sql.ResultSet
 
 
@@ -37,13 +38,17 @@ open class Table(name: String) : ColumnSet {
         +tableName
     }
 
-    fun int(name: String): Column<Int> = add(Column(this, name, IntColumnType))
+    fun int(name: String): Column<Int> = addColumn(name, IntColumnType)
 
-    fun string(name: String): Column<String> = add(Column(this, name, StringColumnType))
+    fun string(name: String): Column<String> = addColumn(name, StringColumnType)
+
+    fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> = addColumn(name, DecimalColumnType(precision, scale))
 
     @Suppress("UNCHECKED_CAST")
     open operator fun <T : Any?> get(column: Column<T>): Column<T> =
         columns.find { it == column } as? Column<T> ?: error("Column `$column` not found in table `$tableName`")
+
+    private fun <T> addColumn(name: String, type: ColumnType<T>): Column<T> = add(Column(this, name, type))
 
     private fun <T> add(column: Column<T>): Column<T> = column.also { _columns += it }
 
@@ -60,7 +65,14 @@ class Slice(override val source: ColumnSet, override val fields: List<Field<*>>)
     }
 }
 
-class Projection(override val source: Table, columns: List<Column<*>>) : ColumnSet {
+fun ColumnSet.slice(field: Field<*>, vararg more: Field<*>): FieldSet = slice(listOf(field) + more)
+
+fun ColumnSet.slice(set: FieldSet): FieldSet = Slice(this, set.fields)
+
+fun ColumnSet.slice(fields: List<Field<*>>): FieldSet = Slice(this, fields)
+
+
+class TableSlice(override val source: Table, columns: List<Column<*>>) : ColumnSet {
     override val columns: List<Column<*>> = columns.map { source[it] }
 
     override fun build(statement: SqlStatement) = statement {
@@ -68,10 +80,39 @@ class Projection(override val source: Table, columns: List<Column<*>>) : ColumnS
     }
 }
 
-fun Table.slice(field: Field<*>, vararg more: Field<*>): FieldSet = slice(listOf(field) + more)
-
-fun Table.slice(fields: List<Field<*>>): FieldSet = Slice(this, fields)
-
 fun Table.slice(column: Column<*>, vararg more: Column<*>): ColumnSet = slice(listOf(column) + more)
 
-fun Table.slice(columns: List<Column<*>>): ColumnSet = Projection(this, columns)
+fun Table.slice(columns: List<Column<*>>): ColumnSet = TableSlice(this, columns)
+
+
+class Join(
+    private val table: ColumnSet,
+    private val otherTable: ColumnSet,
+    private val condition: Expression): ColumnSet {
+
+    override val source: ColumnSet = this
+
+    override val columns: List<Column<*>> get() = table.columns + otherTable.columns
+
+    override fun build(statement: SqlStatement) = statement {
+        +table
+        append(" JOIN ")
+        + otherTable
+        append(" ON ")
+        +condition
+    }
+}
+
+fun ColumnSet.join(otherTable: ColumnSet, condition: Expression): Join {
+    return Join(this, otherTable, condition)
+}
+
+fun ColumnSet.join(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: Column<*>): Join {
+    return Join(this, otherTable) {
+        it.append(onColumn)
+        it.append(" = ")
+        it.append(otherColumn)
+    }
+}
+
+fun ColumnSet.join(otherTable: ColumnSet, condition: String): Join  = join(otherTable, PreparedExpression(condition, listOf()))

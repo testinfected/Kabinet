@@ -29,7 +29,7 @@ class Literal<T>(private val expression: String, private val type: ColumnType<T>
 }
 
 
-fun booleanLiteral(expression: String) = Literal(expression, BooleanColumnType)
+fun intLiteral(expression: String) = Literal(expression, IntColumnType)
 
 
 class PreparedExpression(private val sql: String, private val parameters: List<Any?>) : Expression {

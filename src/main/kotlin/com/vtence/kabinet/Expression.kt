@@ -1,5 +1,7 @@
 package com.vtence.kabinet
 
+import java.math.BigDecimal
+
 
 fun interface Expression {
     fun build(statement: SqlStatement)
@@ -26,11 +28,7 @@ class SqlStatement(private val prepared: Boolean = false) {
 
     fun appendArgument(type: ColumnType<*>, value: Any?): SqlStatement = apply {
         if (prepared) append("?") else append(type.toSql(value))
-        recordArgument(type to value)
-    }
-
-    fun recordArgument(argument: Argument<*>) {
-        args.add(argument)
+        args.add(type to value)
     }
 
     fun <T> Iterable<T>.join(
@@ -71,7 +69,7 @@ fun buildSql(prepared: Boolean = false, body: SqlStatement.() -> Unit): String {
     return buildStatement(prepared, body).toSql()
 }
 
-fun Expression.asSql(prepared: Boolean = false) = SqlStatement(prepared).append(this).toSql()
+fun Expression.asSql(prepared: Boolean = false) = buildSql(prepared) { +this@asSql }
 
 fun Expression.arguments(): List<Argument<*>> = SqlStatement(true).append(this).arguments
 
@@ -80,6 +78,7 @@ private fun toExpression(value: Any?): Expression = when (value) {
     is Boolean -> QueryParameter(value, BooleanColumnType)
     is Int -> QueryParameter(value, IntColumnType)
     is String -> QueryParameter(value, StringColumnType)
+    is BigDecimal -> QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
     // TODO
     else -> QueryParameter(value, ObjectColumnType)
 }

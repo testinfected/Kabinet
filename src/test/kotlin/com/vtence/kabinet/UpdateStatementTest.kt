@@ -2,7 +2,6 @@ package com.vtence.kabinet
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.vtence.kabinet.Products.description
 import com.vtence.kabinet.Products.name
 import com.vtence.kabinet.Products.number
 import kotlin.test.Test

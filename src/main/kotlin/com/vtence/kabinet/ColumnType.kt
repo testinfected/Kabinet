@@ -1,5 +1,7 @@
 package com.vtence.kabinet
 
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -96,3 +98,38 @@ object IntColumnType : ColumnType<Int>() {
     }
 }
 
+class DecimalColumnType(
+    /** Significant digits */
+    val precision: Int,
+    /** Decimal digits in the fractional part */
+    val scale: Int
+) : ColumnType<BigDecimal>() {
+    override val sqlType: SQLType = JDBCType.NUMERIC
+
+    @Suppress("UNCHECKED_CAST")
+    override fun nullable() = this as ColumnType<BigDecimal?>
+
+    override fun get(rs: ResultSet, index: Int): BigDecimal? {
+        return rs.getBigDecimal(index).setScale(scale, RoundingMode.HALF_EVEN)
+    }
+
+    override fun toString(): String = "DECIMAL($precision, $scale)"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DecimalColumnType
+
+        if (precision != other.precision) return false
+        if (scale != other.scale) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = precision
+        result = 31 * result + scale
+        return result
+    }
+}
