@@ -1,7 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.20"
+    kotlin("jvm") version "1.5.30"
+    `maven-publish`
+    signing
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 repositories {
@@ -35,4 +38,28 @@ tasks.test {
     testLogging {
         events("failed", "standardOut")
     }
+}
+
+java {
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("kabinet") {
+            from(components["java"])
+        }
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            stagingProfileId.set("com.vtence")
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications["kabinet"])
 }
