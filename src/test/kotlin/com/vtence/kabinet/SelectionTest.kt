@@ -2,11 +2,13 @@ package com.vtence.kabinet
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import com.vtence.kabinet.OrderThat.hasNumber
 import com.vtence.kabinet.ProductThat.hasName
 import com.vtence.kabinet.ProductThat.hasSameStateAs
 import com.vtence.kabinet.Products.name
 import com.vtence.kabinet.Products.number
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -94,10 +96,8 @@ class SelectionTest {
                 .limit(2, offset = 1)
                 .list(recorder) { product }
 
+        assertThat("selected", selection, allElements(hasName(containsSubstring("Bulldog"))))
         assertThat("selection", selection, hasSize(equalTo(2)))
-        assertThat(
-            "selected", selection, allElements(hasName(containsSubstring("Bulldog")))
-        )
 
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products LIMIT 2 OFFSET 1")
     }
@@ -113,9 +113,7 @@ class SelectionTest {
                 .selectWhere("name = ?", "French Bulldog")
                 .list(recorder) { product }
 
-        assertThat(
-            "selected", selection, anyElement(hasName(containsSubstring("Bulldog")))
-        )
+        assertThat("selected", selection, anyElement(hasName(containsSubstring("Bulldog"))))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description FROM products " +
@@ -132,9 +130,7 @@ class SelectionTest {
                 .slice(number, name)
                 .selectAll(recorder) { this[number] to this[name] }
 
-        assertThat(
-            "slices", slices, hasElement(77777777 to "French Bulldog")
-        )
+        assertThat("slices", slices, hasElement(77777777 to "French Bulldog"))
 
         recorder.assertSql("SELECT products.number, products.name FROM products")
     }
@@ -169,8 +165,8 @@ class SelectionTest {
                 .selectWhere("p.name = ?", "Labrador Retriever")
                 .list(recorder) { product("p") }
 
-        assertThat("selection", selection, hasSize(equalTo(1)))
         assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
+        assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT p.id, p.number, p.name, p.description " +
@@ -191,12 +187,13 @@ class SelectionTest {
                 .selectWhere("items.price > ?", BigDecimal("1000"))
                 .list(recorder) { product }
 
-        assertThat("selection", selection, hasSize(equalTo(1)))
         assertThat("selected", selection, anyElement(hasName("Boxer")))
+        assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price " +
-                    "FROM products JOIN items ON products.id = items.product_id WHERE items.price > 1000")
+                    "FROM products INNER JOIN items ON products.id = items.product_id WHERE items.price > 1000"
+        )
     }
 
     @Test
@@ -210,12 +207,13 @@ class SelectionTest {
                 .selectWhere("items.price < ?", BigDecimal("1000"))
                 .list(recorder) { product }
 
-        assertThat("selection", selection, hasSize(equalTo(1)))
         assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
+        assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price " +
-                    "FROM products JOIN items ON products.id = items.product_id WHERE items.price < 1000")
+                    "FROM products INNER JOIN items ON products.id = items.product_id WHERE items.price < 1000"
+        )
     }
 
     @Test
@@ -229,12 +227,13 @@ class SelectionTest {
                 .selectWhere("item.price > ?", BigDecimal("1000"))
                 .list(recorder) { product }
 
-        assertThat("selection", selection, hasSize(equalTo(1)))
         assertThat("selected", selection, anyElement(hasName("Boxer")))
+        assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description, item.id, item.number, item.product_id, item.price " +
-                    "FROM products JOIN items AS item ON products.id = item.product_id WHERE item.price > 1000")
+                    "FROM products INNER JOIN items AS item ON products.id = item.product_id WHERE item.price > 1000"
+        )
     }
 
     @Test
@@ -249,13 +248,47 @@ class SelectionTest {
                 .selectWhere("item.price > ?", BigDecimal("1000"))
                 .list(recorder) { product }
 
-        assertThat("selection", selection, hasSize(equalTo(1)))
         assertThat("selected", selection, anyElement(hasName("Boxer")))
+        assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description " +
-                    "FROM products JOIN items AS item ON products.id = item.product_id WHERE item.price > 1000")
+                    "FROM products INNER JOIN items AS item ON products.id = item.product_id WHERE item.price > 1000"
+        )
     }
+
+    @Test
+    fun `querying data from multiple tables using a left join`() {
+        persist(Order(number = "00000001"))
+        persist(Order(number = "10000001"))
+        val paid = Order(number = "10000002").also {
+            it.id = persist(it)
+        }
+
+        persist(paid.paymentOn(LocalDate.parse("2021-12-25")))
+
+        val selection =
+            Orders
+                .leftJoin(Payments, Orders.id, Payments.orderId)
+                .slice(Orders)
+                .selectWhere("orders.number LIKE ?", "1000%")
+                .list(recorder) { order }
+
+        assertThat(
+            "selected", selection, allOf(
+                anyElement(hasNumber("10000001")),
+                anyElement(hasNumber("10000002"))
+            )
+        )
+        assertThat("selection", selection, hasSize(equalTo(2)))
+
+        recorder.assertSql(
+            "SELECT orders.id, orders.number, orders.placed_at " +
+                    "FROM orders LEFT JOIN payments ON orders.id = payments.order_id " +
+                    "WHERE orders.number LIKE '1000%'"
+        )
+    }
+
 
     private fun persist(product: Product): Int {
         return transaction {
@@ -266,6 +299,18 @@ class SelectionTest {
     private fun persist(item: Item): Int {
         return transaction {
             Items.insert(item.record).execute(recorder) get Items.id
+        }
+    }
+
+    private fun persist(order: Order): Int {
+        return transaction {
+            Orders.insert(order.record).execute(recorder) get Orders.id
+        }
+    }
+
+    private fun persist(payment: Payment): Int {
+        return transaction {
+            Payments.insert(payment.record).execute(recorder) get Payments.id
         }
     }
 }

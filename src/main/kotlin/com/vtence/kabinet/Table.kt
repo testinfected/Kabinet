@@ -2,6 +2,8 @@ package com.vtence.kabinet
 
 import java.math.BigDecimal
 import java.sql.ResultSet
+import java.time.Instant
+import java.time.LocalDate
 
 
 interface Field<T> : Expression {
@@ -42,7 +44,12 @@ open class Table(name: String) : ColumnSet {
 
     fun string(name: String): Column<String> = addColumn(name, StringColumnType)
 
-    fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> = addColumn(name, DecimalColumnType(precision, scale))
+    fun decimal(name: String, precision: Int, scale: Int): Column<BigDecimal> =
+        addColumn(name, DecimalColumnType(precision, scale))
+
+    fun timestamp(name: String): Column<Instant> = addColumn(name, InstantColumnType)
+
+    fun date(name: String): Column<LocalDate> = addColumn(name, LocalDateColumnType)
 
     @Suppress("UNCHECKED_CAST")
     open operator fun <T : Any?> get(column: Column<T>): Column<T> =
@@ -88,7 +95,9 @@ fun Table.slice(columns: List<Column<*>>): ColumnSet = TableSlice(this, columns)
 class Join(
     private val table: ColumnSet,
     private val otherTable: ColumnSet,
-    private val condition: Expression): ColumnSet {
+    private val type: JoinType = JoinType.INNER,
+    private val condition: Expression
+) : ColumnSet {
 
     override val source: ColumnSet = this
 
@@ -96,23 +105,46 @@ class Join(
 
     override fun build(statement: SqlStatement) = statement {
         +table
-        append(" JOIN ")
-        + otherTable
+        append(" $type JOIN ")
+        +otherTable
         append(" ON ")
         +condition
     }
 }
 
+enum class JoinType {
+    INNER,
+    LEFT,
+}
+
+
 fun ColumnSet.join(otherTable: ColumnSet, condition: Expression): Join {
-    return Join(this, otherTable, condition)
+    return Join(this, otherTable, JoinType.INNER, condition)
 }
 
 fun ColumnSet.join(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: Column<*>): Join {
-    return Join(this, otherTable) {
+    return join(otherTable) {
         it.append(onColumn)
         it.append(" = ")
         it.append(otherColumn)
     }
 }
 
-fun ColumnSet.join(otherTable: ColumnSet, condition: String): Join  = join(otherTable, PreparedExpression(condition, listOf()))
+fun ColumnSet.join(otherTable: ColumnSet, condition: String): Join =
+    join(otherTable, PreparedExpression(condition, listOf()))
+
+
+fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: Expression): Join {
+    return Join(this, otherTable, JoinType.LEFT, condition)
+}
+
+fun ColumnSet.leftJoin(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: Column<*>): Join {
+    return leftJoin(otherTable) {
+        it.append(onColumn)
+        it.append(" = ")
+        it.append(otherColumn)
+    }
+}
+
+fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: String): Join =
+    leftJoin(otherTable, PreparedExpression(condition, listOf()))

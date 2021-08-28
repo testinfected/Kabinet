@@ -2,10 +2,12 @@ package com.vtence.kabinet
 
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.sql.JDBCType
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.SQLType
+import java.sql.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 
 abstract class ColumnType<T> {
@@ -49,6 +51,8 @@ object ObjectColumnType : ColumnType<Any>() {
         is String -> StringColumnType.toNonNullSql(value)
         is Boolean -> BooleanColumnType.toNonNullSql(value)
         is Int, Long -> IntColumnType.toNonNullSql(value)
+        is LocalDate -> LocalDateColumnType.toNonNullSql(value)
+        is Instant -> InstantColumnType.toNonNullSql(value)
         // TODO
         else -> value.toString()
     }
@@ -98,6 +102,7 @@ object IntColumnType : ColumnType<Int>() {
     }
 }
 
+
 class DecimalColumnType(
     /** Significant digits */
     val precision: Int,
@@ -133,3 +138,53 @@ class DecimalColumnType(
         return result
     }
 }
+
+
+object InstantColumnType : ColumnType<Instant>() {
+    override val sqlType = JDBCType.TIMESTAMP
+
+    @Suppress("UNCHECKED_CAST")
+    override fun nullable() = this as ColumnType<Instant?>
+
+    override fun get(rs: ResultSet, index: Int): Instant? {
+        return rs.getTimestamp(index).toInstant()
+    }
+
+    override fun toNonNullSql(value: Any): String {
+        val instant = when(value) {
+            is Instant -> value
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+        return "'${ISO_DATE_TIME_FORMATTER.format(instant)}'"
+    }
+
+    private val ISO_DATE_TIME_FORMATTER by lazy {
+        DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+    }
+}
+
+
+object LocalDateColumnType : ColumnType<LocalDate>() {
+    override val sqlType = JDBCType.DATE
+
+    @Suppress("UNCHECKED_CAST")
+    override fun nullable() = this as ColumnType<LocalDate?>
+
+    override fun get(rs: ResultSet, index: Int): LocalDate? {
+        return rs.getObject(index, LocalDate::class.java)
+    }
+
+    override fun toNonNullSql(value: Any): String {
+        val date = when (value) {
+            is LocalDate -> value
+            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+        }
+
+        return "'${ISO_DATE_FORMATTER.format(date)}'"
+    }
+
+    private val ISO_DATE_FORMATTER by lazy {
+        DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+    }
+}
+

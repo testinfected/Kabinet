@@ -8,7 +8,7 @@ class ParametrizedStatementTest {
 
     @Test
     fun `replaces parameters by their values`() {
-        val statement = ParametrizedStatement(
+        val statement = ParameterizedStatement(
             "SELECT * FROM vegetables WHERE color = :color AND taste = :taste AND length = :length"
         )
         statement["taste"] = "sweet"
@@ -39,7 +39,7 @@ class ParametrizedStatementTest {
 
     @Test
     fun `correctly handles confusing parameter names`() {
-        val statement = ParametrizedStatement(
+        val statement = ParameterizedStatement(
             "SELECT * FROM vegetables WHERE color_gradient = :color_gradient AND color = :color"
         )
         statement["color"] = "green"

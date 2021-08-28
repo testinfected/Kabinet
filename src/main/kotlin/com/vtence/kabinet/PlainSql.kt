@@ -5,7 +5,7 @@ import java.sql.ResultSet
 
 
 class PlainSql(sql: String) {
-    private val statement = ParametrizedStatement(sql)
+    private val statement = ParameterizedStatement(sql)
 
     operator fun set(name: String, value: Any?): PlainSql = apply {
         statement[name] = value
