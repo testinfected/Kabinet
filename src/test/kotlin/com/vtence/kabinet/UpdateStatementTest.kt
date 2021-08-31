@@ -11,10 +11,10 @@ class UpdateStatementTest {
     fun `updates specified columns in target table`() {
         val update = UpdateStatement(Products.slice(number, name), listOf(77777777, "Frenchie"))
 
-        assertThat("raw sql", update.asSql(), equalTo(
+        assertThat("raw sql", update.toSql(), equalTo(
             "UPDATE products SET number = 77777777, name = 'Frenchie'"
         ))
-        assertThat("prepared sql", update.asSql(prepared = true), equalTo(
+        assertThat("prepared sql", update.toSql(prepared = true), equalTo(
             "UPDATE products SET number = ?, name = ?"
         ))
         assertThat("parameters", update.arguments(), equalTo(
@@ -29,10 +29,10 @@ class UpdateStatementTest {
             it.appendArgument(IntColumnType to 77777777)
         }
 
-        assertThat("raw sql", update.asSql(), equalTo(
+        assertThat("raw sql", update.toSql(), equalTo(
             "UPDATE products SET name = 'Frenchie' WHERE number = 77777777"
         ))
-        assertThat("prepared sql", update.asSql(prepared = true), equalTo(
+        assertThat("prepared sql", update.toSql(prepared = true), equalTo(
             "UPDATE products SET name = ? WHERE number = ?"
         ))
         assertThat("parameters", update.arguments(), equalTo(

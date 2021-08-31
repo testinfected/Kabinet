@@ -11,7 +11,7 @@ class PreparedExpressionTest {
     fun `preserves parameterless expression`() {
         val expression = PreparedExpression("name = 'Bulldog'", listOf())
 
-        assertThat("sql", expression.asSql(), equalTo("name = 'Bulldog'"))
+        assertThat("sql", expression.toSql(), equalTo("name = 'Bulldog'"))
         assertThat("args", expression.arguments(), isEmpty)
     }
 
@@ -19,10 +19,10 @@ class PreparedExpressionTest {
     fun `replaces question marks with parameters, in order`() {
         val expression = PreparedExpression("number = ? AND name = ?", listOf(12345678, "Mastiff"))
 
-        assertThat("raw sql", expression.asSql(), equalTo(
+        assertThat("raw sql", expression.toSql(), equalTo(
             "number = 12345678 AND name = 'Mastiff'"
         ))
-        assertThat("prepared sql", expression.asSql(prepared = true), equalTo(
+        assertThat("prepared sql", expression.toSql(prepared = true), equalTo(
             "number = ? AND name = ?"
         ))
         assertThat("args", expression.arguments(), equalTo(
@@ -34,10 +34,10 @@ class PreparedExpressionTest {
     fun `ignores doubled question marks`() {
         val expression = PreparedExpression("number = ? AND thing ?? ...", listOf(12345678))
 
-        assertThat("raw sql", expression.asSql(), equalTo(
+        assertThat("raw sql", expression.toSql(), equalTo(
             "number = 12345678 AND thing ?? ..."
         ))
-        assertThat("prepared sql", expression.asSql(prepared = true), equalTo(
+        assertThat("prepared sql", expression.toSql(prepared = true), equalTo(
             "number = ? AND thing ?? ..."
         ))
         assertThat("args", expression.arguments(), equalTo(
@@ -49,10 +49,10 @@ class PreparedExpressionTest {
     fun `ignores quoted question marks`() {
         val expression = PreparedExpression("foo = \"?\" AND bar = '?' and baz = '\"?'", listOf())
 
-        assertThat("raw sql", expression.asSql(), equalTo(
+        assertThat("raw sql", expression.toSql(), equalTo(
             "foo = \"?\" AND bar = '?' and baz = '\"?'"
         ))
-        assertThat("prepared sql", expression.asSql(prepared = true), equalTo(
+        assertThat("prepared sql", expression.toSql(prepared = true), equalTo(
             "foo = \"?\" AND bar = '?' and baz = '\"?'"
         ))
         assertThat("args", expression.arguments(), isEmpty)

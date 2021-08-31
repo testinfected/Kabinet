@@ -2,9 +2,7 @@ package com.vtence.kabinet
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.vtence.kabinet.ProductThat.hasDescription
-import com.vtence.kabinet.ProductThat.hasNumber
-import com.vtence.kabinet.Products.number
+import com.vtence.kabinet.ProductThat.hasName
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -26,20 +24,42 @@ class DeletionTest {
         connection.close()
     }
 
+    val bulldog = Product(number = 11111111, name = "English Bulldog")
+    val frenchie = Product(number = 77777777, name = "French Bulldog")
+    val lab = Product(number = 88888888, name = "Labrador Retriever")
+
     @Test
     fun `deleting all records`() {
-        persist(Product(number = 11111111, name = "English Bulldog"))
-        persist(Product(number = 77777777, name = "French Bulldog"))
-        persist(Product(number = 88888888, name = "Labrador Retriever"))
+        persist(bulldog)
+        persist(frenchie)
+        persist(lab)
 
         val deleted = transaction {
             Products.deleteAll(recorder)
         }
 
         assertThat("records deleted", deleted, equalTo(3))
+        assertThat("sql", recorder.lastStatement, equalTo("DELETE FROM products"))
 
         val records = Products.selectAll().list(recorder) { product }
         assertThat("records left", records, isEmpty)
+    }
+
+    @Test
+    fun `deleting a specific record`() {
+        persist(bulldog)
+        persist(frenchie)
+        persist(lab)
+
+        val deleted = transaction {
+            Products.deleteWhere("number = ?", "11111111").execute(recorder)
+        }
+
+        assertThat("records deleted", deleted, equalTo(1))
+        val records = Products.selectAll().list(recorder) { product }
+
+        assertThat("records left", records, hasSize(equalTo(2)))
+        assertThat("remaining", records, anyElement(hasName(frenchie.name)) and anyElement(hasName(lab.name)))
     }
 
     private fun persist(product: Product) {

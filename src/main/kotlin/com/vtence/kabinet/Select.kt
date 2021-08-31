@@ -7,9 +7,6 @@ import java.sql.ResultSet
 class Select(private val from: FieldSet) : Query() {
     private val statement = SelectStatement(from)
 
-    fun where(clause: String, vararg args: Any?): Query =
-        where(PreparedExpression(clause, args.toList()))
-
     fun where(clause: Expression): Query = apply {
         statement.where(clause)
     }
@@ -30,7 +27,7 @@ class Select(private val from: FieldSet) : Query() {
         return result.toList()
     }
 
-    override fun toString(): String = statement.asSql()
+    override fun toString(): String = statement.toSql()
 
     companion object {
         fun from(fields: FieldSet): Select = Select(fields)
@@ -42,7 +39,10 @@ fun <T : FieldSet> T.select(): Select = Select.from(this)
 fun <T : FieldSet> T.selectAll(): Query = select()
 
 fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query =
-    select().where(clause, *args)
+    selectWhere(PreparedExpression(clause, args.toList()))
+
+fun <T : FieldSet> T.selectWhere(expression: Expression): Query =
+    select().where(expression)
 
 fun <T : FieldSet, R> T.selectAll(executor: StatementExecutor, hydrate: ResultRow.() -> R): List<R> =
     select().list(executor, hydrate)

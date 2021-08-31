@@ -10,13 +10,13 @@ class InsertStatementTest {
         val insert = InsertStatement(Products, listOf(55555555, "Bobtail", "A clever dog"))
 
         assertThat(
-            "raw sql", insert.asSql(), equalTo(
+            "raw sql", insert.toSql(), equalTo(
                 "INSERT INTO products(number, name, description) VALUES(55555555, 'Bobtail', 'A clever dog')"
             )
         )
 
         assertThat(
-            "prepared sql", insert.asSql(prepared = true), equalTo(
+            "prepared sql", insert.toSql(prepared = true), equalTo(
                 "INSERT INTO products(number, name, description) VALUES(?, ?, ?)"
             )
         )

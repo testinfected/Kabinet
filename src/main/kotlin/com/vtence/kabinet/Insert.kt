@@ -17,7 +17,7 @@ class Insert(private val table: Table, data: DataChange) {
         })
     }
 
-    override fun toString(): String = statement.asSql()
+    override fun toString(): String = statement.toSql()
 
     companion object {
         fun into(table: Table, values: DataChange): Insert {

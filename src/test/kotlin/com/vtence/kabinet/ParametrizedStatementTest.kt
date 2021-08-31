@@ -16,12 +16,12 @@ class ParametrizedStatementTest {
         statement["color"] = "green"
 
         assertThat(
-            "raw sql", statement.asSql(),
+            "raw sql", statement.toSql(),
             equalTo("SELECT * FROM vegetables WHERE color = 'green' AND taste = 'sweet' AND length = 10")
         )
 
         assertThat(
-            "prepared sql", statement.asSql(prepared = true),
+            "prepared sql", statement.toSql(prepared = true),
             equalTo("SELECT * FROM vegetables WHERE color = ? AND taste = ? AND length = ?")
         )
 
@@ -46,7 +46,7 @@ class ParametrizedStatementTest {
         statement["color_gradient"] = "linear"
 
         assertThat(
-            "sql", statement.asSql(),
+            "sql", statement.toSql(),
             equalTo("SELECT * FROM vegetables WHERE color_gradient = 'linear' AND color = 'green'")
         )
     }

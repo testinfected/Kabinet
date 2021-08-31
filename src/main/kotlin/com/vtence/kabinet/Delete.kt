@@ -9,6 +9,10 @@ class Delete(private val table: Table): Command {
         })
     }
 
+    fun where(expression: Expression): Command = apply {
+        statement.where(expression)
+    }
+
     companion object {
         fun from(table: Table): Delete = Delete(table)
     }
@@ -17,4 +21,10 @@ class Delete(private val table: Table): Command {
 
 fun Table.deleteAll(executor: StatementExecutor) =
     Delete.from(this).execute(executor)
+
+fun Table.deleteWhere(condition: String, vararg parameters: Any?): Command =
+    deleteWhere(PreparedExpression(condition, parameters.toList()))
+
+fun Table.deleteWhere(expression: Expression):Command =
+    Delete.from(this).where(expression)
 

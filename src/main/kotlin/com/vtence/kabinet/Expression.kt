@@ -53,11 +53,11 @@ class SqlStatement(private val prepared: Boolean = false) {
 
     fun Any?.asArgument(): Expression = toExpression(this)
 
-    fun toSql(): String {
+    fun asSql(): String {
         return sql.toString()
     }
 
-    override fun toString(): String = toSql()
+    override fun toString(): String = asSql()
 }
 
 
@@ -66,10 +66,10 @@ fun buildStatement(prepared: Boolean = false, body: SqlStatement.() -> Unit): Sq
 }
 
 fun buildSql(prepared: Boolean = false, body: SqlStatement.() -> Unit): String {
-    return buildStatement(prepared, body).toSql()
+    return buildStatement(prepared, body).asSql()
 }
 
-fun Expression.asSql(prepared: Boolean = false) = buildSql(prepared) { +this@asSql }
+fun Expression.toSql(prepared: Boolean = false) = buildSql(prepared) { +this@toSql }
 
 fun Expression.arguments(): List<Argument<*>> = SqlStatement(true).append(this).arguments
 

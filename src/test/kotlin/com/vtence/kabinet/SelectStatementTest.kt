@@ -10,7 +10,7 @@ class SelectStatementTest {
         val select = SelectStatement(Products)
 
         assertThat(
-            select.asSql(), equalTo(
+            select.toSql(), equalTo(
                 "SELECT products.id, products.number, products.name, products.description FROM products"
             )
         )
@@ -21,7 +21,7 @@ class SelectStatementTest {
         val select = SelectStatement(Products).limitTo(1, start = 0)
 
         assertThat(
-            select.asSql(), equalTo(
+            select.toSql(), equalTo(
                 "SELECT products.id, products.number, products.name, products.description FROM products LIMIT 1"
             )
         )
@@ -33,7 +33,7 @@ class SelectStatementTest {
             .limitTo(10, start = 100)
 
         assertThat(
-            select.asSql(), equalTo(
+            select.toSql(), equalTo(
                 "SELECT products.id, products.number, products.name, products.description FROM products LIMIT 10 OFFSET 100"
             )
         )
@@ -44,7 +44,7 @@ class SelectStatementTest {
         val select = SelectStatement(Products).where { it.append("number = 100 AND name = 'Lab'") }
 
         assertThat(
-            "sql", select.asSql(), equalTo(
+            "sql", select.toSql(), equalTo(
                 "SELECT products.id, products.number, products.name, products.description " +
                         "FROM products WHERE number = 100 AND name = 'Lab'"
             )
@@ -62,13 +62,13 @@ class SelectStatementTest {
         }
 
         assertThat(
-            "sql", select.asSql(), equalTo(
+            "sql", select.toSql(), equalTo(
                 "SELECT products.id, products.number, products.name, products.description " +
                         "FROM products WHERE number = 10001000 AND name = 'Chihuahua'"
             )
         )
         assertThat(
-            "prepared sql", select.asSql(prepared = true), equalTo(
+            "prepared sql", select.toSql(prepared = true), equalTo(
                 "SELECT products.id, products.number, products.name, products.description " +
                         "FROM products WHERE number = ? AND name = ?"
             )

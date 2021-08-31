@@ -4,12 +4,8 @@ package com.vtence.kabinet
 class Update(set: ColumnSet, data: DataChange) : Command {
     private val statement = UpdateStatement(set, data.values)
 
-    fun where(condition: String, vararg params: Any?): Command =
-        where(PreparedExpression(condition, params.toList()))
-
-    fun where(condition: Expression): Command {
+    fun where(condition: Expression): Command = apply {
         statement.where(condition)
-        return this
     }
 
     override fun execute(executor: StatementExecutor): Int {
@@ -18,7 +14,7 @@ class Update(set: ColumnSet, data: DataChange) : Command {
         })
     }
 
-    override fun toString(): String = statement.asSql()
+    override fun toString(): String = statement.toSql()
 
     companion object {
         fun set(columns: ColumnSet, values: DataChange): Update = Update(columns, values)
@@ -32,4 +28,7 @@ fun <T : Table> T.update(record: T.(Dataset) -> Unit): Update {
 }
 
 fun <T : Table> T.updateWhere(condition: String, vararg params: Any?, record: T.(Dataset) -> Unit): Command =
-    update(record).where(condition, *params)
+    updateWhere(PreparedExpression(condition, params.toList()), record)
+
+fun <T : Table> T.updateWhere(expression: Expression, record: T.(Dataset) -> Unit): Command =
+    update(record).where(expression)

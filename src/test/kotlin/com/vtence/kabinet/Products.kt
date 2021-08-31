@@ -1,9 +1,6 @@
 package com.vtence.kabinet
 
-import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.and
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.*
 
 
 data class Product(
