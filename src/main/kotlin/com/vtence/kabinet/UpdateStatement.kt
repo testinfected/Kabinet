@@ -24,7 +24,7 @@ class UpdateStatement(private val set: ColumnSet, private val values: Iterable<A
         }
     }
 
-    override fun <T> prepare(parameters: Iterable<Any?>, query: (PreparedStatement) -> T): JdbcStatement<T> {
+    override fun <T> prepare(query: (PreparedStatement) -> T): JdbcStatement<T> {
         return PreparedJdbcStatement(this, query, false)
     }
 }

@@ -16,7 +16,7 @@ class InsertStatement(private val into: Table, private val values: Iterable<Any?
         }
     }
 
-    override fun <T> prepare(parameters: Iterable<Any?>, query: (PreparedStatement) -> T): JdbcStatement<T> {
+    override fun <T> prepare(query: (PreparedStatement) -> T): JdbcStatement<T> {
         return PreparedJdbcStatement(this, query,true)
     }
 }

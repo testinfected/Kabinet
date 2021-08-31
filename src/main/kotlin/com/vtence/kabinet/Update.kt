@@ -1,8 +1,8 @@
 package com.vtence.kabinet
 
 
-class Update(set: ColumnSet, values: DataChange) : Command {
-    private val statement = UpdateStatement(set, values.values)
+class Update(set: ColumnSet, data: DataChange) : Command {
+    private val statement = UpdateStatement(set, data.values)
 
     fun where(condition: String, vararg params: Any?): Command =
         where(PreparedExpression(condition, params.toList()))
@@ -21,12 +21,7 @@ class Update(set: ColumnSet, values: DataChange) : Command {
     override fun toString(): String = statement.asSql()
 
     companion object {
-        fun set(
-            columns: ColumnSet,
-            values: DataChange
-        ): Update {
-            return Update(columns, values)
-        }
+        fun set(columns: ColumnSet, values: DataChange): Update = Update(columns, values)
     }
 }
 

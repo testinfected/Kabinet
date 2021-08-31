@@ -7,7 +7,7 @@ import java.sql.Statement.*
 
 
 interface Preparable {
-    fun <T> prepare(parameters: Iterable<Any?> = listOf(), query: (PreparedStatement) -> T): JdbcStatement<T>
+    fun <T> prepare(query: (PreparedStatement) -> T): JdbcStatement<T>
 }
 
 

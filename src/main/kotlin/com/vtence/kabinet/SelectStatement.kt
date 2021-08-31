@@ -34,7 +34,7 @@ class SelectStatement(
         }
     }
 
-    override fun <T> prepare(parameters: Iterable<Any?>, query: (PreparedStatement) -> T): JdbcStatement<T> {
+    override fun <T> prepare(query: (PreparedStatement) -> T): JdbcStatement<T> {
         return PreparedJdbcStatement(this, query, false)
     }
 }
