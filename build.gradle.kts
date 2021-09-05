@@ -48,6 +48,40 @@ publishing {
     publications {
         create<MavenPublication>("kabinet") {
             from(components["java"])
+
+            infix fun <T> Property<T>.by(value: T) {
+                set(value)
+            }
+
+            pom {
+                name by project.name
+                description by "A barebone data mapping library in Kotlin"
+                url by "https://github.com/testinfected/Kabinet"
+
+                licenses {
+                    license {
+                        name by "BSD 3-Clause License"
+                        url by "https://opensource.org/licenses/BSD-3-Clause"
+                        distribution by "repo"
+                    }
+                }
+
+                developers {
+                    developer {
+                        id by "testinfected"
+                        name by "Vincent Tencé"
+                        organization by "Bee Software"
+                        organizationUrl by "http://bee.software"
+                    }
+                }
+
+                scm {
+                    url by "https://github.com/testinfected/Kabinet"
+                    connection by "https://github.com/testinfected/Kabinet.git"
+                    developerConnection by "git@github.com:testinfected/Kabinet.git"
+                }
+
+            }
         }
     }
 }
