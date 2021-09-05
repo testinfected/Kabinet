@@ -9,6 +9,7 @@ class SelectStatement(
     private var whereClause: Expression? = null
     private var limit: Int? = null
     private var offset: Int = 0
+    private var count: Boolean = false
 
     fun where(clause: Expression): SelectStatement = apply {
         whereClause = clause
@@ -19,9 +20,17 @@ class SelectStatement(
         offset = start
     }
 
+    fun countOnly(): SelectStatement = apply {
+        count = true
+    }
+
     override fun build(statement: SqlStatement) = statement {
         append("SELECT ")
-        from.fields.join { +it }
+        if (count) {
+            append("COUNT(*)")
+        } else {
+            from.fields.join { +it }
+        }
         append(" FROM ")
         +from.source
         whereClause?.let {

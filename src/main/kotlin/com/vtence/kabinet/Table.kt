@@ -131,7 +131,7 @@ fun ColumnSet.join(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: Colu
 }
 
 fun ColumnSet.join(otherTable: ColumnSet, condition: String): Join =
-    join(otherTable, PreparedExpression(condition, listOf()))
+    join(otherTable, condition.asExpression())
 
 
 fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: Expression): Join {
@@ -147,4 +147,4 @@ fun ColumnSet.leftJoin(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: 
 }
 
 fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: String): Join =
-    leftJoin(otherTable, PreparedExpression(condition, listOf()))
+    leftJoin(otherTable, condition.asExpression())

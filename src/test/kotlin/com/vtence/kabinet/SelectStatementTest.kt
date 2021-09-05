@@ -82,4 +82,11 @@ class SelectStatementTest {
             )
         )
     }
+
+    @Test
+    fun `toggles to counting instead of selecting`() {
+        val select = SelectStatement(Products).countOnly()
+
+        assertThat("sql", select.toSql(), equalTo("SELECT COUNT(*) FROM products"))
+    }
 }

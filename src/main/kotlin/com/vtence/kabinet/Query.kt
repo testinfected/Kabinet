@@ -10,6 +10,8 @@ abstract class Query {
         limit(1).list(executor, hydrate).singleOrNull()
 
     abstract fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T>
+
+    abstract fun count(executor: StatementExecutor): Long
 }
 
 

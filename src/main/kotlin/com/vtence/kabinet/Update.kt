@@ -28,7 +28,7 @@ fun <T : Table> T.update(record: T.(Dataset) -> Unit): Update {
 }
 
 fun <T : Table> T.updateWhere(condition: String, vararg params: Any?, record: T.(Dataset) -> Unit): Command =
-    updateWhere(PreparedExpression(condition, params.toList()), record)
+    updateWhere(condition.asExpression(*params), record)
 
 fun <T : Table> T.updateWhere(expression: Expression, record: T.(Dataset) -> Unit): Command =
     update(record).where(expression)

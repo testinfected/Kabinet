@@ -66,6 +66,11 @@ class PreparedExpression(private val sql: String, private val parameters: List<A
 }
 
 
+fun String.asExpression(vararg parameters: Any?) = asExpression(parameters.toList())
+
+fun String.asExpression(parameters: List<Any?>) = PreparedExpression(this, parameters)
+
+
 class QueryParameter<T : Any>(
     private val value: T?,
     private val type: ColumnType<T>

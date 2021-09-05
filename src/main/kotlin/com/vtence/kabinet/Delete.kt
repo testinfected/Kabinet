@@ -23,7 +23,7 @@ fun Table.deleteAll(executor: StatementExecutor) =
     Delete.from(this).execute(executor)
 
 fun Table.deleteWhere(condition: String, vararg parameters: Any?): Command =
-    deleteWhere(PreparedExpression(condition, parameters.toList()))
+    deleteWhere(condition.asExpression(*parameters))
 
 fun Table.deleteWhere(expression: Expression):Command =
     Delete.from(this).where(expression)

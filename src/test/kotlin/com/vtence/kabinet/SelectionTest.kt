@@ -289,6 +289,24 @@ class SelectionTest {
         )
     }
 
+    @Test
+    fun `counting the number of records`() {
+        persist(Order(number = "00000001"))
+        persist(Order(number = "10000002"))
+        persist(Order(number = "10000003"))
+        persist(Order(number = "10000004"))
+        persist(Order(number = "00000005"))
+
+        val count =
+            Orders.selectWhere("number like '1%'")
+                    .count(recorder)
+
+        assertThat("total orders", count, equalTo(3))
+
+        recorder.assertSql(
+            "SELECT COUNT(*) FROM orders WHERE number like '1%'"
+        )
+    }
 
     private fun persist(product: Product): Int {
         return transaction {

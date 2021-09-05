@@ -17,7 +17,7 @@ class ParameterizedStatement(private val sql: String) : Preparable, Expression {
 
     override fun build(statement: SqlStatement) = statement {
         val (sql, args) = prepareSql()
-        +PreparedExpression(sql, args)
+        +sql.asExpression(args)
     }
 
     private fun prepareSql(): Pair<String, List<Any?>> {

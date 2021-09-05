@@ -14,9 +14,19 @@ class Select(private val from: FieldSet) : Query() {
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
 
     override fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T> {
-        return executor.execute(statement.prepare { select ->
-            read(select.executeQuery(), hydrate)
-        })
+        return execute(executor) { rs -> read(rs, hydrate) }
+    }
+
+    override fun count(executor: StatementExecutor): Long {
+        statement.countOnly()
+        return execute(executor) { rs ->
+            rs.next()
+            rs.getLong(1)
+        }
+    }
+
+    private fun <T> execute(executor: StatementExecutor, hydrate: (ResultSet) -> T): T {
+        return executor.execute(statement.prepare { hydrate(it.executeQuery()) })
     }
 
     private fun <T> read(rs: ResultSet, hydrate: ResultRow.() -> T): List<T> {
@@ -39,7 +49,7 @@ fun <T : FieldSet> T.select(): Select = Select.from(this)
 fun <T : FieldSet> T.selectAll(): Query = select()
 
 fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query =
-    selectWhere(PreparedExpression(clause, args.toList()))
+    selectWhere(clause.asExpression(*args))
 
 fun <T : FieldSet> T.selectWhere(expression: Expression): Query =
     select().where(expression)
