@@ -89,4 +89,10 @@ class SelectStatementTest {
 
         assertThat("sql", select.toSql(), equalTo("SELECT COUNT(*) FROM products"))
     }
+
+    @Test
+    fun `supports distinct clause`() {
+        val select = SelectStatement(Products).distinctOnly()
+        assertThat("sql", select.toSql(), equalTo("SELECT DISTINCT products.id, products.number, products.name, products.description FROM products"))
+    }
 }

@@ -41,7 +41,7 @@ class DeletionTest {
         assertThat("records deleted", deleted, equalTo(3))
         assertThat("sql", recorder.lastStatement, equalTo("DELETE FROM products"))
 
-        val records = Products.selectAll().list(recorder) { product }
+        val records = Products.selectAll(recorder) { product }
         assertThat("records left", records, isEmpty)
     }
 
@@ -56,7 +56,7 @@ class DeletionTest {
         }
 
         assertThat("records deleted", deleted, equalTo(1))
-        val records = Products.selectAll().list(recorder) { product }
+        val records = Products.selectAll(recorder) { product }
 
         assertThat("records left", records, hasSize(equalTo(2)))
         assertThat("remaining", records, anyElement(hasName(frenchie.name)) and anyElement(hasName(lab.name)))

@@ -11,6 +11,10 @@ class Select(private val from: FieldSet) : Query() {
         statement.where(clause)
     }
 
+    override fun distinct(): Select = apply {
+        statement.distinctOnly()
+    }
+
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
 
     override fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T> {

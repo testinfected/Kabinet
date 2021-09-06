@@ -10,6 +10,7 @@ class SelectStatement(
     private var limit: Int? = null
     private var offset: Int = 0
     private var count: Boolean = false
+    private var distinct: Boolean = false
 
     fun where(clause: Expression): SelectStatement = apply {
         whereClause = clause
@@ -24,11 +25,19 @@ class SelectStatement(
         count = true
     }
 
+    fun distinctOnly(): SelectStatement = apply {
+        distinct = true
+    }
+
     override fun build(statement: SqlStatement) = statement {
         append("SELECT ")
         if (count) {
             append("COUNT(*)")
-        } else {
+        } else if (distinct) {
+            append("DISTINCT ")
+            from.fields.join { +it }
+        }
+        else {
             from.fields.join { +it }
         }
         append(" FROM ")

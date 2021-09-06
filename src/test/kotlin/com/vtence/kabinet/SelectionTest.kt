@@ -298,8 +298,9 @@ class SelectionTest {
         persist(Order(number = "00000005"))
 
         val count =
-            Orders.selectWhere("number like '1%'")
-                    .count(recorder)
+            Orders
+                .selectWhere("number like '1%'")
+                .count(recorder)
 
         assertThat("total orders", count, equalTo(3))
 
@@ -307,6 +308,31 @@ class SelectionTest {
             "SELECT COUNT(*) FROM orders WHERE number like '1%'"
         )
     }
+
+    @Test
+    fun `selecting only distinct records`() {
+        val best = persist(frenchie)
+        persist(Item(productId = best, number = "0001", price = BigDecimal.valueOf(100)))
+        persist(Item(productId = best, number = "0002", price = BigDecimal.valueOf(100)))
+        persist(Item(productId = persist(lab), number = "0003", price = BigDecimal.valueOf(100)))
+        persist(Item(productId = persist(boxer), number = "0004", price = BigDecimal.valueOf(100)))
+
+        val uniques = Products
+            .join(Items, "items.product_id = products.id")
+            .slice(Products)
+            .selectAll()
+            .listDistinct(recorder) { product }
+
+
+        assertThat("distinct products", uniques, hasSize(equalTo(3)))
+
+        recorder.assertSql(
+            "SELECT DISTINCT products.id, products.number, products.name, products.description " +
+                    "FROM products " +
+                    "INNER JOIN items ON items.product_id = products.id"
+        )
+    }
+
 
     private fun persist(product: Product): Int {
         return transaction {
