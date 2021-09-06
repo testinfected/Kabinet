@@ -74,7 +74,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll().first(recorder) { product }
+        val selection = Products.selectAll().firstOrNull(recorder) { product }
 
         assertThat("selected", selection, present(hasName("French Bulldog")))
 
@@ -146,7 +146,8 @@ class SelectionTest {
         val expr =
             Products
                 .slice(count)
-                .selectFirst(recorder) { this[count] }
+                .selectAll()
+                .firstOrNull(recorder) { this[count] }
 
         assertThat("expr", expr, equalTo(3))
 

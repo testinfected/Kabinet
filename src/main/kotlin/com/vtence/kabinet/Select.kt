@@ -64,9 +64,3 @@ fun <T : FieldSet, R> T.selectAll(executor: StatementExecutor, hydrate: ResultRo
 fun <T : FieldSet, R> T.selectAll(connection: Connection, hydrate: ResultRow.() -> R): List<R> =
     selectAll(StatementExecutor(connection), hydrate)
 
-fun <T : FieldSet, R> T.selectFirst(executor: StatementExecutor, hydrate: ResultRow.() -> R): R? =
-    select().first(executor, hydrate)
-
-fun <T : FieldSet, R> T.selectFirst(connection: Connection, hydrate: ResultRow.() -> R): R? =
-    selectFirst(StatementExecutor(connection), hydrate)
-
