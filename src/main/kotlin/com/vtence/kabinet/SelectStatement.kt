@@ -31,13 +31,16 @@ class SelectStatement(
 
     override fun build(statement: SqlStatement) = statement {
         append("SELECT ")
-        if (count) {
+        if (count && distinct) {
+            append("COUNT(DISTINCT (")
+            from.fields.join { +it }
+            append("))")
+        } else if (count && !distinct) {
             append("COUNT(*)")
         } else if (distinct) {
             append("DISTINCT ")
             from.fields.join { +it }
-        }
-        else {
+        } else {
             from.fields.join { +it }
         }
         append(" FROM ")

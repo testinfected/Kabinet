@@ -20,6 +20,9 @@ abstract class Query {
 fun <T> Query.list(connection: Connection, hydrate: ResultRow.() -> T): List<T> =
     list(StatementExecutor(connection), hydrate)
 
+fun Query.count(connection: Connection): Long =
+    count(StatementExecutor(connection))
+
 fun <T> Query.firstOrNull(connection: Connection, hydrate: ResultRow.() -> T): T? =
     firstOrNull(StatementExecutor(connection), hydrate)
 
@@ -28,6 +31,12 @@ fun <T> Query.listDistinct(executor: StatementExecutor, hydrate: ResultRow.() ->
 
 fun <T> Query.listDistinct(connection: Connection, hydrate: ResultRow.() -> T): List<T> =
     listDistinct(StatementExecutor(connection), hydrate)
+
+fun Query.countDistinct(executor: StatementExecutor): Long =
+    distinct().count(executor)
+
+fun Query.countDistinct(connection: Connection): Long =
+    countDistinct(StatementExecutor(connection))
 
 
 

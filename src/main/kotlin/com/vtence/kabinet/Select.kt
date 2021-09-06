@@ -48,18 +48,16 @@ class Select(private val from: FieldSet) : Query() {
     }
 }
 
-fun <T : FieldSet> T.select(): Select = Select.from(this)
-
-fun <T : FieldSet> T.selectAll(): Query = select()
+fun <T : FieldSet> T.selectAll(): Query = Select.from(this)
 
 fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query =
     selectWhere(clause.asExpression(*args))
 
 fun <T : FieldSet> T.selectWhere(expression: Expression): Query =
-    select().where(expression)
+    Select.from(this).where(expression)
 
 fun <T : FieldSet, R> T.selectAll(executor: StatementExecutor, hydrate: ResultRow.() -> R): List<R> =
-    select().list(executor, hydrate)
+    Select.from(this).list(executor, hydrate)
 
 fun <T : FieldSet, R> T.selectAll(connection: Connection, hydrate: ResultRow.() -> R): List<R> =
     selectAll(StatementExecutor(connection), hydrate)

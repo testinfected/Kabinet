@@ -334,6 +334,28 @@ class SelectionTest {
         )
     }
 
+    @Test
+    fun `counting only distinct records`() {
+        val best = persist(frenchie)
+        persist(Item(productId = best, number = "0001", price = BigDecimal.valueOf(100)))
+        persist(Item(productId = best, number = "0002", price = BigDecimal.valueOf(100)))
+        persist(Item(productId = persist(lab), number = "0003", price = BigDecimal.valueOf(100)))
+        persist(Item(productId = persist(boxer), number = "0004", price = BigDecimal.valueOf(100)))
+
+        val count = Products
+            .join(Items, "items.product_id = products.id")
+            .slice(Products)
+            .selectAll()
+            .countDistinct(recorder)
+
+        assertThat("count", count, equalTo(3))
+
+        recorder.assertSql(
+            "SELECT COUNT(DISTINCT (products.id, products.number, products.name, products.description)) " +
+                    "FROM products " +
+                    "INNER JOIN items ON items.product_id = products.id"
+        )
+    }
 
     private fun persist(product: Product): Int {
         return transaction {
