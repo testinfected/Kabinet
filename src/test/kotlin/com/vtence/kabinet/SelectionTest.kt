@@ -2,9 +2,11 @@ package com.vtence.kabinet
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import com.vtence.kabinet.Items.productId
 import com.vtence.kabinet.OrderThat.hasNumber
 import com.vtence.kabinet.ProductThat.hasName
 import com.vtence.kabinet.ProductThat.hasSameStateAs
+import com.vtence.kabinet.Products.id
 import com.vtence.kabinet.Products.name
 import com.vtence.kabinet.Products.number
 import java.math.BigDecimal
@@ -287,6 +289,43 @@ class SelectionTest {
             "SELECT orders.id, orders.number, orders.placed_at " +
                     "FROM orders LEFT JOIN payments ON orders.id = payments.order_id " +
                     "WHERE orders.number LIKE '1000%'"
+        )
+    }
+
+    @Test
+    fun `using multiple joins`() {
+        with(persist(boxer)) {
+            persist(Item(productId = this, number = "1001", price = BigDecimal("1199.00")))
+        }
+        with(persist(frenchie)) {
+            persist(Item(productId = this, number = "2001", price = BigDecimal("4499.00")))
+            persist(Item(productId = this, number = "2002", price = BigDecimal("4499.00")))
+        }
+        with(persist(lab)) {
+            persist(Item(productId = this, number = "3001", price = BigDecimal("799.00")))
+            persist(Item(productId = this, number = "3002", price = BigDecimal("899.00")))
+        }
+
+        val product = Products.alias("product")
+        val item = Items.alias("item")
+        val other = Items.alias("other")
+
+        val selection = product
+            .join(item, product[id], item[productId])
+            .leftJoin(other, product[id], other[productId])
+            .slice(product[name])
+            .selectWhere("item.number <> other.number AND item.price = other.price")
+            .listDistinct(recorder) { get(product[name]) }
+
+        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat("selection", selection, anyElement(equalTo("French Bulldog")))
+
+        recorder.assertSql(
+            "SELECT DISTINCT product.name " +
+                    "FROM products AS product " +
+                    "INNER JOIN items AS item ON product.id = item.product_id " +
+                    "LEFT JOIN items AS other ON product.id = other.product_id " +
+                    "WHERE item.number <> other.number AND item.price = other.price"
         )
     }
 
