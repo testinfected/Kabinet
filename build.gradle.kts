@@ -42,6 +42,7 @@ tasks.test {
 
 java {
     withSourcesJar()
+    withJavadocJar()
 }
 
 publishing {
@@ -89,7 +90,6 @@ publishing {
 nexusPublishing {
     repositories {
         sonatype {
-            stagingProfileId.set("com.vtence")
         }
     }
 }
