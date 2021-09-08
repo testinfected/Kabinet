@@ -55,7 +55,7 @@ open class Table(name: String) : ColumnSet {
     open operator fun <T : Any?> get(column: Column<T>): Column<T> =
         columns.find { it == column } as? Column<T> ?: error("Column `$column` not found in table `$tableName`")
 
-    private fun <T> addColumn(name: String, type: ColumnType<T>): Column<T> = add(Column(this, name, type))
+    open fun <T> addColumn(name: String, type: ColumnType<T>): Column<T> = add(Column(this, name, type))
 
     private fun <T> add(column: Column<T>): Column<T> = column.also { _columns += it }
 
