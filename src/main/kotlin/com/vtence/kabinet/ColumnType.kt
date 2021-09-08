@@ -17,7 +17,7 @@ abstract class ColumnType<T> {
 
     open fun set(statement: PreparedStatement, index: Int, value: Any?) {
         if (value != null)
-            statement.setObject(index, value, sqlType.vendorTypeNumber)
+            statement.setObject(index, toJdbc(value), sqlType.vendorTypeNumber)
         else
             statement.setNull(index, sqlType.vendorTypeNumber)
     }
@@ -34,6 +34,8 @@ abstract class ColumnType<T> {
     override fun toString(): String {
         return sqlType.name
     }
+
+    open fun toJdbc(value: Any) = value
 }
 
 
@@ -146,8 +148,15 @@ object InstantColumnType : ColumnType<Instant>() {
     @Suppress("UNCHECKED_CAST")
     override fun nullable() = this as ColumnType<Instant?>
 
+    override fun toJdbc(value: Any): Any {
+        return when(value) {
+            is Instant -> Timestamp.from(value)
+            else -> value
+        }
+    }
+
     override fun get(rs: ResultSet, index: Int): Instant? {
-        return rs.getTimestamp(index).toInstant()
+        return rs.getTimestamp(index)?.toInstant()
     }
 
     override fun toNonNullSql(value: Any): String {
@@ -155,10 +164,10 @@ object InstantColumnType : ColumnType<Instant>() {
             is Instant -> value
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
-        return "'${ISO_DATE_TIME_FORMATTER.format(instant)}'"
+        return "'${ISO_LOCAL_DATE_TIME_FORMATTER.format(instant)}'"
     }
 
-    private val ISO_DATE_TIME_FORMATTER by lazy {
+    private val ISO_LOCAL_DATE_TIME_FORMATTER by lazy {
         DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
     }
 }
