@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 
 val product = Products
@@ -19,7 +20,7 @@ class ResultRowTest {
             alternate[product.number] to 2,
             product.description to 3,
             item.id to 4,
-            item.number to 5
+            item.number to 5,
         )
     )
 
@@ -46,18 +47,32 @@ class ResultRowTest {
     }
 
     @Test
-    fun `replaces original table fields with aliased fields, dropping original fields but preserving others`() {
+    fun `replaces original table fields with aliased fields, dropping original fields`() {
         row[product.id] = 1
         row[product.name] = "Frenchie"
         row[alternate[product.number]] = "77777777"
-        row[item.id] = 1
-        row[item.number] = "1000000"
+
+        row[item.id] = 42
+        row[item.number] = "..."
 
         val rebase = row.rebase(alternate)
-        assertThat("product number", rebase[product.number], equalTo("77777777"))
-        assertThat("item number", rebase[item.number], equalTo("1000000"))
 
+        assertThat("product number", rebase[product.number], equalTo("77777777"))
         assertThat("product id", { rebase[product.id] }, throws<IllegalStateException>())
         assertThat("product name", { rebase[product.id] }, throws<IllegalStateException>())
+    }
+
+    @Test
+    fun `rebasing preserves other fields and tolerates nulls`() {
+        row[product.id] = 42
+        row[product.name] = ".."
+        row[alternate[product.number]] = "..."
+
+        row[item.id] = 1
+        row[item.number] = null
+
+        val rebase = row.rebase(alternate)
+        assertThat("item number", rebase[item.id], equalTo(1))
+        assertThrows<IllegalStateException> { rebase[item.number] }
     }
 }

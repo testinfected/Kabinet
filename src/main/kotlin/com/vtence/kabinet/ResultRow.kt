@@ -19,11 +19,15 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
     private val data = arrayOfNulls<Any?>(fields.size)
 
     operator fun <T> get(field: Field<T>): T {
-        val index = fields[field] ?: error("'$field' not in result set")
-        val value = data[index]
+        val value = getOrNull(field)
         if (value == null && field is Column<*> && !field.isNullable) error("'$field' is null in result set")
         @Suppress("UNCHECKED_CAST")
         return value as T
+    }
+
+    private fun <T> getOrNull(field: Field<T>): Any? {
+        val index = fields[field] ?: error("'$field' not in result set")
+        return data[index]
     }
 
     operator fun <T> set(field: Field<out T>, value: T) {
@@ -34,8 +38,8 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
     fun rebase(alias: TableAlias<*>): ResultRow {
         val mapping = fields.mapNotNull { (field, _) ->
             val column = field as? Column<*>
-            val value = this[field]
             val original = column?.let { alias.originalColumn(it) }
+            val value = getOrNull(field)
             when {
                 original != null -> original to value
                 column?.table == alias.delegate -> null
