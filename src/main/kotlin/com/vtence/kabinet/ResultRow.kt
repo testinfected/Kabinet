@@ -21,7 +21,7 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
     operator fun <T> get(field: Field<T>): T {
         val index = fields[field] ?: error("'$field' not in result set")
         val value = data[index]
-        if (value == null && field is Column<*> && !field.nullable) error("'$field' is null in result set")
+        if (value == null && field is Column<*> && !field.isNullable) error("'$field' is null in result set")
         @Suppress("UNCHECKED_CAST")
         return value as T
     }
