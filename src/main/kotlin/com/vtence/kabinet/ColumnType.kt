@@ -117,7 +117,7 @@ class DecimalColumnType(
     override fun nullable() = this as ColumnType<BigDecimal?>
 
     override fun get(rs: ResultSet, index: Int): BigDecimal? {
-        return rs.getBigDecimal(index).setScale(scale, RoundingMode.HALF_EVEN)
+        return rs.getBigDecimal(index)?.setScale(scale, RoundingMode.HALF_EVEN)
     }
 
     override fun toString(): String = "DECIMAL($precision, $scale)"

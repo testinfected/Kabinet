@@ -35,7 +35,7 @@ data class LineItem(
 
 
 fun Item.lineFor(order: Order): LineItem {
-    return LineItem(orderId = order.id, itemNumber = number, itemUnitPrice = price)
+    return LineItem(orderId = order.id, itemNumber = number, itemUnitPrice = price!!)
 }
 
 

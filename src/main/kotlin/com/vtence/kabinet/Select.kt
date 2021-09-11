@@ -7,6 +7,8 @@ import java.sql.ResultSet
 class Select(private val from: FieldSet) : Query() {
     private val statement = SelectStatement(from)
 
+    fun where(clause: String, vararg args: Any?): Query = where(clause.asExpression(*args))
+
     fun where(clause: Expression): Query = apply {
         statement.where(clause)
     }

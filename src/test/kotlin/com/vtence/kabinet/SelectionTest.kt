@@ -352,10 +352,10 @@ class SelectionTest {
     @Test
     fun `selecting only distinct records`() {
         val best = persist(frenchie)
-        persist(Item(productId = best, number = "0001", price = BigDecimal.valueOf(100)))
-        persist(Item(productId = best, number = "0002", price = BigDecimal.valueOf(100)))
-        persist(Item(productId = persist(lab), number = "0003", price = BigDecimal.valueOf(100)))
-        persist(Item(productId = persist(boxer), number = "0004", price = BigDecimal.valueOf(100)))
+        persist(Item(productId = best, number = "0001"))
+        persist(Item(productId = best, number = "0002"))
+        persist(Item(productId = persist(lab), number = "0003"))
+        persist(Item(productId = persist(boxer), number = "0004"))
 
         val uniques = Products
             .join(Items, "items.product_id = products.id")
