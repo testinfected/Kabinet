@@ -100,7 +100,7 @@ private fun LineItems.hydrate(rs: ResultRow): LineItem {
     )
 }
 
-val LineItem.record: LineItems.(Dataset) -> Unit
+val LineItem.record: Dehydrator<LineItems>
     get() = { dehydrate(it, this@record) }
 
 val ResultRow.lineItem: LineItem

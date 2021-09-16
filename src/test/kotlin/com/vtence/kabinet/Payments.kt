@@ -38,7 +38,7 @@ fun Payments.hydrate(row: ResultRow): Payment {
     )
 }
 
-val Payment.record: Payments.(Dataset) -> Unit
+val Payment.record: Dehydrator<Payments>
     get() = dehydrate(this)
 
 val ResultRow.payment: Payment

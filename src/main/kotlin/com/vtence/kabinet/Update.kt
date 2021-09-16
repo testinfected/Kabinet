@@ -22,13 +22,13 @@ class Update(set: ColumnSet, data: DataChange) : Command {
 }
 
 
-fun <T : Table> T.update(record: T.(Dataset) -> Unit): Update {
+fun <T : Table> T.update(record: Dehydrator<T>): Update {
     val change = Dataset.opened().apply { record(this) }
     return Update.set(slice(change.columns), values = change)
 }
 
-fun <T : Table> T.updateWhere(condition: String, vararg params: Any?, record: T.(Dataset) -> Unit): Command =
+fun <T : Table> T.updateWhere(condition: String, vararg params: Any?, record: Dehydrator<T>): Command =
     updateWhere(condition.asExpression(*params), record)
 
-fun <T : Table> T.updateWhere(expression: Expression, record: T.(Dataset) -> Unit): Command =
+fun <T : Table> T.updateWhere(expression: Expression, record: Dehydrator<T>): Command =
     update(record).where(expression)

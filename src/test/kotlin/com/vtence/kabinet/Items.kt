@@ -32,7 +32,7 @@ private fun Items.hydrate(row: ResultRow): Item {
     )
 }
 
-val Item.record: Items.(Dataset) -> Unit
+val Item.record: Dehydrator<Items>
     get() = { dehydrate(it, this@record) }
 
 val ResultRow.item: Item

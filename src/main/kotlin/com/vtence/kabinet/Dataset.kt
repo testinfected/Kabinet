@@ -28,3 +28,5 @@ class Dataset(private val base: List<Column<*>>): DataChange {
         fun opened() = Dataset(listOf())
     }
 }
+
+typealias Dehydrator<T> = T.(Dataset) -> Unit
