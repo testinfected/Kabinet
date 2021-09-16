@@ -1,6 +1,6 @@
 package com.vtence.kabinet
 
-class Delete(private val table: Table): Command {
+class Delete(table: Table): Command {
     private val statement = DeleteStatement(table)
 
     override fun execute(executor: StatementExecutor): Int {

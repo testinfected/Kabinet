@@ -40,7 +40,7 @@ class UpdateTest {
         assertThat("update count", updated, equalTo(2))
         recorder.assertSql("UPDATE products SET description = 'A companion for kids'")
 
-        val records = Products.selectAll(recorder) { product }
+        val records = Products.selectAll(recorder) { it.product }
 
         assertThat("updated products", records, allElements(hasDescription("A companion for kids")))
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
@@ -61,7 +61,7 @@ class UpdateTest {
             recorder.assertSql("UPDATE products SET name = 'Frenchie', description = 'A miniature Bulldog' WHERE products.number = 77777777")
         }
 
-        val records = Products.selectAll(recorder) { product }
+        val records = Products.selectAll(recorder) { it.product }
 
         assertThat(
             "updated record", records, anyElement(

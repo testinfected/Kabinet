@@ -23,7 +23,7 @@ class Select(private val from: FieldSet) : Query() {
 
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
 
-    override fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T> {
+    override fun <T> list(executor: StatementExecutor, hydrate: (ResultRow) -> T): List<T> {
         return execute(executor) { rs -> read(rs, hydrate) }
     }
 
@@ -39,7 +39,7 @@ class Select(private val from: FieldSet) : Query() {
         return executor.execute(statement.prepare { hydrate(it.executeQuery()) })
     }
 
-    private fun <T> read(rs: ResultSet, hydrate: ResultRow.() -> T): List<T> {
+    private fun <T> read(rs: ResultSet, hydrate: (ResultRow) -> T): List<T> {
         val result = mutableListOf<T>()
         while (rs.next()) {
             result += hydrate(ResultRow.readFrom(rs, from.fields))
@@ -62,9 +62,9 @@ fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query =
 fun <T : FieldSet> T.selectWhere(expression: Expression): Query =
     Select.from(this).where(expression)
 
-fun <T : FieldSet, R> T.selectAll(executor: StatementExecutor, hydrate: ResultRow.() -> R): List<R> =
+fun <T : FieldSet, R> T.selectAll(executor: StatementExecutor, hydrate: (ResultRow) -> R): List<R> =
     Select.from(this).list(executor, hydrate)
 
-fun <T : FieldSet, R> T.selectAll(connection: Connection, hydrate: ResultRow.() -> R): List<R> =
+fun <T : FieldSet, R> T.selectAll(connection: Connection, hydrate: (ResultRow) -> R): List<R> =
     selectAll(StatementExecutor(connection), hydrate)
 

@@ -41,7 +41,7 @@ class PlainSqlTest {
                 .set("number", "12345678")
                 .set("name", "English Bulldog")
                 .set("description", "A muscular, heavy dog")
-                .insert(recorder) { id }
+                .insert(recorder) { it.id }
         }
 
         recorder.assertSql(
@@ -51,12 +51,12 @@ class PlainSqlTest {
         val products = sql(
             "SELECT * FROM products WHERE number = :number"
         )
-        val found = products.set("number", "12345678").list(recorder) {
+        val found = products.set("number", "12345678").list(recorder) { rs ->
             Product(
-                id = getInt("id"),
-                number = getInt("number"),
-                name = getString("name"),
-                description = getString("description"),
+                id = rs.getInt("id"),
+                number = rs.getInt("number"),
+                name = rs.getString("name"),
+                description = rs.getString("description"),
             )
         }
 

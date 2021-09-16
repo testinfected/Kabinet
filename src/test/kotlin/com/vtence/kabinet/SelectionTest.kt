@@ -39,7 +39,7 @@ class SelectionTest {
     fun `retrieving a record from a table`() {
         val id = persist(frenchie)
 
-        val records = Products.selectAll(recorder) { product }
+        val records = Products.selectAll(recorder) { it.product }
 
         assertThat("record", records, anyElement(hasSameStateAs(frenchie.copy(id = id))))
 
@@ -55,7 +55,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll(recorder) { product }
+        val selection = Products.selectAll(recorder) { it.product }
 
         assertThat("selection", selection, hasSize(equalTo(3)))
         assertThat(
@@ -76,7 +76,7 @@ class SelectionTest {
         persist(bully)
         persist(lab)
 
-        val selection = Products.selectAll().firstOrNull(recorder) { product }
+        val selection = Products.selectAll().firstOrNull(recorder) { it.product }
 
         assertThat("selected", selection, present(hasName("French Bulldog")))
 
@@ -96,7 +96,7 @@ class SelectionTest {
             Products
                 .selectAll()
                 .limit(2, offset = 1)
-                .list(recorder) { product }
+                .list(recorder) { it.product }
 
         assertThat("selected", selection, allElements(hasName(containsSubstring("Bulldog"))))
         assertThat("selection", selection, hasSize(equalTo(2)))
@@ -113,7 +113,7 @@ class SelectionTest {
         val selection =
             Products
                 .selectWhere("name = ?", "French Bulldog")
-                .list(recorder) { product }
+                .list(recorder) { it.product }
 
         assertThat("selected", selection, anyElement(hasName(containsSubstring("Bulldog"))))
 
@@ -130,7 +130,7 @@ class SelectionTest {
         val slices =
             Products
                 .slice(number, name)
-                .selectAll(recorder) { this[number] to this[name] }
+                .selectAll(recorder) { it[number] to it[name] }
 
         assertThat("slices", slices, hasElement(77777777 to "French Bulldog"))
 
@@ -149,7 +149,7 @@ class SelectionTest {
             Products
                 .slice(count)
                 .selectAll()
-                .firstOrNull(recorder) { this[count] }
+                .firstOrNull(recorder) { it[count] }
 
         assertThat("expr", expr, equalTo(3))
 
@@ -166,7 +166,7 @@ class SelectionTest {
             Products
                 .alias("p")
                 .selectWhere("p.name = ?", "Labrador Retriever")
-                .list(recorder) { product("p") }
+                .list(recorder) { it.product("p") }
 
         assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
         assertThat("selection", selection, hasSize(equalTo(1)))
@@ -188,7 +188,7 @@ class SelectionTest {
             Products
                 .join(Items, "products.id = items.product_id")
                 .selectWhere("items.price > ?", BigDecimal("1000"))
-                .list(recorder) { product }
+                .list(recorder) { it.product }
 
         assertThat("selected", selection, anyElement(hasName("Boxer")))
         assertThat("selection", selection, hasSize(equalTo(1)))
@@ -208,7 +208,7 @@ class SelectionTest {
             Products
                 .join(Items, Products.id, Items.productId)
                 .selectWhere("items.price < ?", BigDecimal("1000"))
-                .list(recorder) { product }
+                .list(recorder) { it.product }
 
         assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
         assertThat("selection", selection, hasSize(equalTo(1)))
@@ -228,7 +228,7 @@ class SelectionTest {
             Products
                 .join(Items.alias("item"), "products.id = item.product_id")
                 .selectWhere("item.price > ?", BigDecimal("1000"))
-                .list(recorder) { product }
+                .list(recorder) { it.product }
 
         assertThat("selected", selection, anyElement(hasName("Boxer")))
         assertThat("selection", selection, hasSize(equalTo(1)))
@@ -249,7 +249,7 @@ class SelectionTest {
                 .join(Items.alias("item"), "products.id = item.product_id")
                 .slice(Products)
                 .selectWhere("item.price > ?", BigDecimal("1000"))
-                .list(recorder) { product }
+                .list(recorder) { it.product }
 
         assertThat("selected", selection, anyElement(hasName("Boxer")))
         assertThat("selection", selection, hasSize(equalTo(1)))
@@ -275,7 +275,7 @@ class SelectionTest {
                 .leftJoin(Payments, Orders.id, Payments.orderId)
                 .slice(Orders)
                 .selectWhere("orders.number LIKE ?", "1000%")
-                .list(recorder) { order }
+                .list(recorder) { it.order }
 
         assertThat(
             "selected", selection, allOf(
@@ -315,7 +315,7 @@ class SelectionTest {
             .leftJoin(other, product[id], other[productId])
             .slice(product[name])
             .selectWhere("item.number <> other.number AND item.price = other.price")
-            .listDistinct(recorder) { get(product[name]) }
+            .listDistinct(recorder) { it[product[name]] }
 
         assertThat("selection", selection, hasSize(equalTo(1)))
         assertThat("selection", selection, anyElement(equalTo("French Bulldog")))
@@ -361,7 +361,7 @@ class SelectionTest {
             .join(Items, "items.product_id = products.id")
             .slice(Products)
             .selectAll()
-            .listDistinct(recorder) { product }
+            .listDistinct(recorder) { it.product }
 
 
         assertThat("distinct products", uniques, hasSize(equalTo(3)))
@@ -413,7 +413,7 @@ class SelectionTest {
             .slice(LineItems.itemNumber)
             .selectWhere("order_id = ?", order.id)
             .orderBy("order_line DESC")
-            .list(recorder) { this[LineItems.itemNumber] }
+            .list(recorder) { it[LineItems.itemNumber] }
 
         assertThat(
             "ordered selection", numbers, equalTo(listOf("0003", "0002", "0001"))
@@ -444,7 +444,7 @@ class SelectionTest {
             .slice(LineItems.itemNumber)
             .selectWhere("order_id = ?", order.id)
             .orderBy(LineItems.index, SortOrder.DESC)
-            .list(recorder) { this[LineItems.itemNumber] }
+            .list(recorder) { it[LineItems.itemNumber] }
 
         assertThat(
             "ordered selection", selection, equalTo(listOf("0003", "0002", "0001"))

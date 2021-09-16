@@ -8,10 +8,10 @@ abstract class Query {
 
     abstract fun limit(count: Int, offset: Int = 0): Query
 
-    fun <T> firstOrNull(executor: StatementExecutor, hydrate: ResultRow.() -> T): T? =
+    fun <T> firstOrNull(executor: StatementExecutor, hydrate: (ResultRow) -> T): T? =
         limit(1).list(executor, hydrate).singleOrNull()
 
-    abstract fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T>
+    abstract fun <T> list(executor: StatementExecutor, hydrate: (ResultRow) -> T): List<T>
 
     abstract fun count(executor: StatementExecutor): Long
 
@@ -19,19 +19,19 @@ abstract class Query {
 }
 
 
-fun <T> Query.list(connection: Connection, hydrate: ResultRow.() -> T): List<T> =
+fun <T> Query.list(connection: Connection, hydrate: (ResultRow) -> T): List<T> =
     list(StatementExecutor(connection), hydrate)
 
 fun Query.count(connection: Connection): Long =
     count(StatementExecutor(connection))
 
-fun <T> Query.firstOrNull(connection: Connection, hydrate: ResultRow.() -> T): T? =
+fun <T> Query.firstOrNull(connection: Connection, hydrate: (ResultRow) -> T): T? =
     firstOrNull(StatementExecutor(connection), hydrate)
 
-fun <T> Query.listDistinct(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T> =
+fun <T> Query.listDistinct(executor: StatementExecutor, hydrate: (ResultRow) -> T): List<T> =
     distinct().list(executor, hydrate)
 
-fun <T> Query.listDistinct(connection: Connection, hydrate: ResultRow.() -> T): List<T> =
+fun <T> Query.listDistinct(connection: Connection, hydrate: (ResultRow) -> T): List<T> =
     listDistinct(StatementExecutor(connection), hydrate)
 
 fun Query.countDistinct(executor: StatementExecutor): Long =
