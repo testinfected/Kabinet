@@ -148,5 +148,5 @@ fun ColumnSet.leftJoin(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: 
     }
 }
 
-fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: String): Join =
-    leftJoin(otherTable, condition.asExpression())
+fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: String, vararg parameters: Any?): Join =
+    leftJoin(otherTable, condition.asExpression(*parameters))
