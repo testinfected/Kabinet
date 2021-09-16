@@ -99,10 +99,41 @@ class SelectStatementTest {
     @Test
     fun `combines distinct and count`() {
         val select = SelectStatement(Products)
-        select.distinctOnly()
-        select.countOnly()
+            .distinctOnly()
+            .countOnly()
         assertThat("sql", select.toSql(), equalTo(
             "SELECT COUNT(DISTINCT (products.id, products.number, products.name, products.description)) FROM products"
+        ))
+    }
+
+    @Test
+    fun `supports order by clause`() {
+        val select = SelectStatement(Products)
+            .orderBy("number DESC".asExpression())
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY number DESC"
+        ))
+    }
+
+    @Test
+    fun `supports parameters in order by clause`() {
+        val select = SelectStatement(Products)
+            .orderBy("substring(number from ? for ?) DESC".asExpression(1, 3))
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY substring(number from 1 for 3) DESC"
+        ))
+    }
+
+    @Test
+    fun `supports multiple order by clauses`() {
+        val select = SelectStatement(Products)
+            .orderBy("number DESC".asExpression())
+            .orderBy("name ASC".asExpression())
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY number DESC, name ASC"
         ))
     }
 

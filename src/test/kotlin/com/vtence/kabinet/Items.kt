@@ -3,7 +3,7 @@ package com.vtence.kabinet
 import java.math.BigDecimal
 
 data class Item(
-    val id: Int? = null,
+    var id: Int? = null,
     val productId: Int,
     val number: String,
     val price: BigDecimal? = null

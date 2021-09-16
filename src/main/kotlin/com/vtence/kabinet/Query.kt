@@ -14,6 +14,8 @@ abstract class Query {
     abstract fun <T> list(executor: StatementExecutor, hydrate: ResultRow.() -> T): List<T>
 
     abstract fun count(executor: StatementExecutor): Long
+
+    abstract fun orderBy(expression: Expression): Query
 }
 
 
@@ -37,6 +39,26 @@ fun Query.countDistinct(executor: StatementExecutor): Long =
 
 fun Query.countDistinct(connection: Connection): Long =
     countDistinct(StatementExecutor(connection))
+
+
+enum class SortOrder {
+    ASC, DESC
+}
+
+fun Query.orderBy(column: Expression, order: SortOrder = SortOrder.ASC): Query = orderBy(column to order)
+
+fun Query.orderBy(vararg order: Pair<Expression, SortOrder>): Query = apply {
+    order.forEach { (clause, sort) ->
+        orderBy {
+            it.append(clause)
+            it.append(" ")
+            it.append(sort.name)
+        }
+    }
+}
+
+fun Query.orderBy(clause: String, vararg parameters: Any?): Query =
+    orderBy(clause.asExpression(*parameters))
 
 
 

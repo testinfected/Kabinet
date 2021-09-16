@@ -13,8 +13,12 @@ class Select(private val from: FieldSet) : Query() {
         statement.where(clause)
     }
 
-    override fun distinct(): Select = apply {
+    override fun distinct(): Query = apply {
         statement.distinctOnly()
+    }
+
+    override fun orderBy(expression: Expression): Query = apply {
+        statement.orderBy(expression)
     }
 
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }

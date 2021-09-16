@@ -11,6 +11,7 @@ class SelectStatement(
     private var offset: Int = 0
     private var count: Boolean = false
     private var distinct: Boolean = false
+    private val orderByClauses: MutableList<Expression> = mutableListOf()
 
     fun where(clause: Expression): SelectStatement = apply {
         whereClause = clause
@@ -27,6 +28,10 @@ class SelectStatement(
 
     fun distinctOnly(): SelectStatement = apply {
         distinct = true
+    }
+
+    fun orderBy(expression: Expression) = apply {
+        orderByClauses += expression
     }
 
     override fun build(statement: SqlStatement) = statement {
@@ -49,6 +54,13 @@ class SelectStatement(
             append(" WHERE ")
             +it
         }
+        if (orderByClauses.isNotEmpty()) {
+            append(" ORDER BY ")
+            orderByClauses.join {
+                +it
+            }
+        }
+
         limit?.let { count ->
             append(" LIMIT ").appendValue(count)
             if (offset > 0) append(" OFFSET ").appendValue(offset)
