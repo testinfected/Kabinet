@@ -147,8 +147,7 @@ class SelectionTest {
 
         val expr =
             Products
-                .slice(count)
-                .selectAll()
+                .select(count)
                 .firstOrNull(recorder) { it[count] }
 
         assertThat("expr", expr, equalTo(3))

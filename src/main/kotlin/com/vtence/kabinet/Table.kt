@@ -65,6 +65,10 @@ open class Table(name: String) : ColumnSet {
         remove(old)
         add(new)
     }
+
+    override fun toString(): String {
+        return "table $tableName"
+    }
 }
 
 
@@ -79,6 +83,8 @@ fun ColumnSet.slice(field: Field<*>, vararg more: Field<*>): FieldSet = slice(li
 fun ColumnSet.slice(set: FieldSet): FieldSet = Slice(this, set.fields)
 
 fun ColumnSet.slice(fields: List<Field<*>>): FieldSet = Slice(this, fields)
+
+fun ColumnSet.select(column: Field<*>, vararg more: Field<*>): Select = Select.from(slice(column, *more))
 
 
 class TableSlice(override val source: Table, columns: List<Column<*>>) : ColumnSet {
