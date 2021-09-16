@@ -125,34 +125,71 @@ enum class JoinType {
     LEFT,
 }
 
+class JoinPart(
+    private val onColumn: Column<*>,
+    private val otherColumn: Column<*>,
+    private val additionalConstraint: Expression?
+) : Expression {
+    override fun build(statement: SqlStatement) = statement {
+        +onColumn
+        +" = "
+        +otherColumn
+        additionalConstraint?.let {
+            +" AND "
+            +additionalConstraint
+        }
+    }
+}
+
 
 fun ColumnSet.join(otherTable: ColumnSet, condition: Expression): Join {
     return Join(this, otherTable, JoinType.INNER, condition)
 }
 
-fun ColumnSet.join(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: Column<*>): Join {
-    return join(otherTable) {
-        it.append(onColumn)
-        it.append(" = ")
-        it.append(otherColumn)
-    }
+fun ColumnSet.join(
+    otherTable: ColumnSet,
+    onColumn: Column<*>,
+    otherColumn: Column<*>,
+    additionalConstraint: Expression? = null
+): Join {
+    return join(otherTable, JoinPart(onColumn, otherColumn, additionalConstraint))
 }
+
+fun ColumnSet.join(
+    otherTable: ColumnSet,
+    onColumn: Column<*>,
+    otherColumn: Column<*>,
+    additionalConstraint: String? = null,
+    vararg parameters: Any?
+): Join = join(otherTable, onColumn, otherColumn, additionalConstraint?.asExpression(*parameters))
+
 
 fun ColumnSet.join(otherTable: ColumnSet, condition: String, vararg parameters: Any?): Join =
     join(otherTable, condition.asExpression(*parameters))
+
 
 
 fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: Expression): Join {
     return Join(this, otherTable, JoinType.LEFT, condition)
 }
 
-fun ColumnSet.leftJoin(otherTable: ColumnSet, onColumn: Column<*>, otherColumn: Column<*>): Join {
-    return leftJoin(otherTable) {
-        it.append(onColumn)
-        it.append(" = ")
-        it.append(otherColumn)
-    }
+fun ColumnSet.leftJoin(
+    otherTable: ColumnSet,
+    onColumn: Column<*>,
+    otherColumn: Column<*>,
+    additionalConstraint: Expression? = null
+): Join {
+    return leftJoin(otherTable, JoinPart(onColumn, otherColumn, additionalConstraint))
 }
+
+fun ColumnSet.leftJoin(
+    otherTable: ColumnSet,
+    onColumn: Column<*>,
+    otherColumn: Column<*>,
+    additionalConstraint: String? = null,
+    vararg parameters: Any?
+): Join = leftJoin(otherTable, onColumn, otherColumn, additionalConstraint?.asExpression(*parameters))
+
 
 fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: String, vararg parameters: Any?): Join =
     leftJoin(otherTable, condition.asExpression(*parameters))

@@ -219,6 +219,29 @@ class SelectionTest {
     }
 
     @Test
+    fun `joining with another table, using join columns and an additional constraint`() {
+        persist(boxer).also {
+            persist(Item(productId = it, number = "543261", price = BigDecimal("1199.00")))
+            persist(Item(productId = it, number = "666633", price = BigDecimal("999.00")))
+        }
+        persist(Item(productId = persist(lab), number = "917541", price = BigDecimal("799.00")))
+
+        val selection =
+            Products
+                .join(Items, Products.id, Items.productId, "$name <> ?", boxer.name)
+                .selectWhere("items.price < ?", BigDecimal("1000"))
+                .list(recorder) { it.product }
+
+        assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
+        assertThat("selection", selection, hasSize(equalTo(1)))
+
+        recorder.assertSql(
+            "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price " +
+                    "FROM products INNER JOIN items ON products.id = items.product_id AND products.name <> 'Boxer' WHERE items.price < 1000"
+        )
+    }
+
+    @Test
     fun `aliasing the join table`() {
         persist(Item(productId = persist(boxer), number = "543261", price = BigDecimal("1199.00")))
         persist(Item(productId = persist(lab), number = "917541", price = BigDecimal("799.00")))
