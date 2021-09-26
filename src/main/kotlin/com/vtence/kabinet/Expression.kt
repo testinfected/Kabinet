@@ -1,6 +1,8 @@
 package com.vtence.kabinet
 
 import java.math.BigDecimal
+import java.time.Instant
+import java.time.LocalDate
 
 
 fun interface Expression {
@@ -61,6 +63,18 @@ class SqlStatement(private val prepared: Boolean = false) {
 }
 
 
+private fun toExpression(value: Any?): Expression = when (value) {
+    is Boolean -> QueryParameter(value, BooleanColumnType)
+    is Int -> QueryParameter(value, IntColumnType)
+    is String -> QueryParameter(value, StringColumnType)
+    is BigDecimal -> QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
+    is Instant -> QueryParameter(value, InstantColumnType)
+    is LocalDate -> QueryParameter(value, LocalDateColumnType)
+    // TODO
+    else -> QueryParameter(value, ObjectColumnType)
+}
+
+
 fun buildStatement(prepared: Boolean = false, body: SqlStatement.() -> Unit): SqlStatement {
     return SqlStatement(prepared).apply(body)
 }
@@ -72,14 +86,4 @@ fun buildSql(prepared: Boolean = false, body: SqlStatement.() -> Unit): String {
 fun Expression.toSql(prepared: Boolean = false) = buildSql(prepared) { +this@toSql }
 
 fun Expression.arguments(): List<Argument<*>> = SqlStatement(true).append(this).arguments
-
-
-private fun toExpression(value: Any?): Expression = when (value) {
-    is Boolean -> QueryParameter(value, BooleanColumnType)
-    is Int -> QueryParameter(value, IntColumnType)
-    is String -> QueryParameter(value, StringColumnType)
-    is BigDecimal -> QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
-    // TODO
-    else -> QueryParameter(value, ObjectColumnType)
-}
 

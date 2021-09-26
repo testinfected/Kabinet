@@ -13,6 +13,7 @@ class UpdateTest {
     val database = Database.inMemory()
     val connection = database.openConnection()
     val transaction = JdbcTransactor(connection)
+    val persist = Persister(connection)
 
     val recorder = StatementRecorder(connection)
 
@@ -75,11 +76,5 @@ class UpdateTest {
         )
 
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
-    }
-
-    private fun persist(product: Product) {
-        transaction {
-            Products.insert(product.record).execute(recorder)
-        }
     }
 }

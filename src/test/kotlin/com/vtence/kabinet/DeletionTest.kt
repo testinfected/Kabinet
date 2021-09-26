@@ -11,6 +11,7 @@ class DeletionTest {
     val database = Database.inMemory()
     val connection = database.openConnection()
     val transaction = JdbcTransactor(connection)
+    val persist = Persister(connection)
 
     val recorder = StatementRecorder(connection)
 
@@ -60,11 +61,5 @@ class DeletionTest {
 
         assertThat("records left", records, hasSize(equalTo(2)))
         assertThat("remaining", records, anyElement(hasName(frenchie.name)) and anyElement(hasName(lab.name)))
-    }
-
-    private fun persist(product: Product) {
-        transaction {
-            Products.insert(product.record).execute(recorder)
-        }
     }
 }

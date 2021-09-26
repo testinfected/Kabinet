@@ -1,5 +1,7 @@
 package com.vtence.kabinet
 
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -43,3 +45,8 @@ val Payment.record: Dehydrator<Payments>
 
 val ResultRow.payment: Payment
     get() = Payments.hydrate(this)
+
+
+object PaymentThat {
+    fun hasDate(on: LocalDate) = has(Payment::date, equalTo(on))
+}

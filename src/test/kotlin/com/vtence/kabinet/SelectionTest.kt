@@ -19,9 +19,9 @@ class SelectionTest {
 
     val database = Database.inMemory()
     val connection = database.openConnection()
-    val transaction = JdbcTransactor(connection)
-
     val recorder = StatementRecorder(connection)
+
+    val persisted = Persister(connection)
 
     @BeforeTest
     fun prepareDatabase() {
@@ -37,7 +37,7 @@ class SelectionTest {
 
     @Test
     fun `retrieving a record from a table`() {
-        val id = persist(frenchie)
+        val id = persisted(frenchie)
 
         val records = Products.selectAll(recorder) { it.product }
 
@@ -51,9 +51,9 @@ class SelectionTest {
 
     @Test
     fun `selecting all records from a table`() {
-        persist(frenchie)
-        persist(bully)
-        persist(lab)
+        persisted(frenchie)
+        persisted(bully)
+        persisted(lab)
 
         val selection = Products.selectAll(recorder) { it.product }
 
@@ -72,9 +72,9 @@ class SelectionTest {
 
     @Test
     fun `selecting the first in a collection of records`() {
-        persist(frenchie)
-        persist(bully)
-        persist(lab)
+        persisted(frenchie)
+        persisted(bully)
+        persisted(lab)
 
         val selection = Products.selectAll().firstOrNull(recorder) { it.product }
 
@@ -87,10 +87,10 @@ class SelectionTest {
 
     @Test
     fun `limiting the quantity of results`() {
-        persist(lab)
-        persist(frenchie)
-        persist(bully)
-        persist(dalmatian)
+        persisted(lab)
+        persisted(frenchie)
+        persisted(bully)
+        persisted(dalmatian)
 
         val selection =
             Products
@@ -106,9 +106,9 @@ class SelectionTest {
 
     @Test
     fun `selecting only those records that fulfill a specified criterion`() {
-        persist(lab)
-        persist(frenchie)
-        persist(dalmatian)
+        persisted(lab)
+        persisted(frenchie)
+        persisted(dalmatian)
 
         val selection =
             Products
@@ -125,7 +125,7 @@ class SelectionTest {
 
     @Test
     fun `selecting only a subset of the table columns`() {
-        persist(frenchie)
+        persisted(frenchie)
 
         val slices =
             Products
@@ -139,9 +139,9 @@ class SelectionTest {
 
     @Test
     fun `slicing using a literal expression`() {
-        persist(frenchie)
-        persist(lab)
-        persist(dalmatian)
+        persisted(frenchie)
+        persisted(lab)
+        persisted(dalmatian)
 
         val count = intLiteral("count(*)")
 
@@ -157,9 +157,9 @@ class SelectionTest {
 
     @Test
     fun `aliasing the table name`() {
-        persist(frenchie)
-        persist(dalmatian)
-        persist(lab)
+        persisted(frenchie)
+        persisted(dalmatian)
+        persisted(lab)
 
         val selection =
             Products
@@ -180,8 +180,8 @@ class SelectionTest {
 
     @Test
     fun `joining with another table, using a literal expression`() {
-        persist(Item(productId = persist(boxer), number = "543261", price = BigDecimal("1199.00")))
-        persist(Item(productId = persist(lab), number = "917541", price = BigDecimal("799.00")))
+        persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
+        persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
         val selection =
             Products
@@ -193,15 +193,15 @@ class SelectionTest {
         assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
-            "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price " +
+            "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price, items.on_sale " +
                     "FROM products INNER JOIN items ON products.id = items.product_id WHERE items.price > 1000"
         )
     }
 
     @Test
     fun `joining with another table, this time specifying join columns`() {
-        persist(Item(productId = persist(boxer), number = "543261", price = BigDecimal("1199.00")))
-        persist(Item(productId = persist(lab), number = "917541", price = BigDecimal("799.00")))
+        persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
+        persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
         val selection =
             Products
@@ -213,18 +213,18 @@ class SelectionTest {
         assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
-            "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price " +
+            "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price, items.on_sale " +
                     "FROM products INNER JOIN items ON products.id = items.product_id WHERE items.price < 1000"
         )
     }
 
     @Test
     fun `joining with another table, using join columns and an additional constraint`() {
-        persist(boxer).also {
-            persist(Item(productId = it, number = "543261", price = BigDecimal("1199.00")))
-            persist(Item(productId = it, number = "666633", price = BigDecimal("999.00")))
+        persisted(boxer).also {
+            persisted(Item(productId = it, number = "543261", price = BigDecimal("1199.00")))
+            persisted(Item(productId = it, number = "666633", price = BigDecimal("999.00")))
         }
-        persist(Item(productId = persist(lab), number = "917541", price = BigDecimal("799.00")))
+        persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
         val selection =
             Products
@@ -236,15 +236,15 @@ class SelectionTest {
         assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
-            "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price " +
+            "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price, items.on_sale " +
                     "FROM products INNER JOIN items ON products.id = items.product_id AND products.name <> 'Boxer' WHERE items.price < 1000"
         )
     }
 
     @Test
     fun `aliasing the join table`() {
-        persist(Item(productId = persist(boxer), number = "543261", price = BigDecimal("1199.00")))
-        persist(Item(productId = persist(lab), number = "917541", price = BigDecimal("799.00")))
+        persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
+        persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
         val selection =
             Products
@@ -256,15 +256,15 @@ class SelectionTest {
         assertThat("selection", selection, hasSize(equalTo(1)))
 
         recorder.assertSql(
-            "SELECT products.id, products.number, products.name, products.description, item.id, item.number, item.product_id, item.price " +
+            "SELECT products.id, products.number, products.name, products.description, item.id, item.number, item.product_id, item.price, item.on_sale " +
                     "FROM products INNER JOIN items AS item ON products.id = item.product_id WHERE item.price > 1000"
         )
     }
 
     @Test
     fun `retrieving only the joined table columns`() {
-        persist(Item(productId = persist(boxer), number = "543261", price = BigDecimal("1199.00")))
-        persist(Item(productId = persist(lab), number = "917541", price = BigDecimal("799.00")))
+        persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
+        persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
         val selection =
             Products
@@ -284,13 +284,13 @@ class SelectionTest {
 
     @Test
     fun `querying data from multiple tables using a left join`() {
-        persist(Order(number = "00000001"))
-        persist(Order(number = "10000001"))
+        persisted(Order(number = "00000001"))
+        persisted(Order(number = "10000001"))
         val paid = Order(number = "10000002").also {
-            it.id = persist(it)
+            it.id = persisted(it)
         }
 
-        persist(paid.paymentOn(LocalDate.parse("2021-12-25")))
+        persisted(paid.paymentOn(LocalDate.parse("2021-12-25")))
 
         val selection =
             Orders
@@ -316,16 +316,16 @@ class SelectionTest {
 
     @Test
     fun `using multiple joins`() {
-        with(persist(boxer)) {
-            persist(Item(productId = this, number = "1001", price = BigDecimal("1199.00")))
+        with(persisted(boxer)) {
+            persisted(Item(productId = this, number = "1001", price = BigDecimal("1199.00")))
         }
-        with(persist(frenchie)) {
-            persist(Item(productId = this, number = "2001", price = BigDecimal("4499.00")))
-            persist(Item(productId = this, number = "2002", price = BigDecimal("4499.00")))
+        with(persisted(frenchie)) {
+            persisted(Item(productId = this, number = "2001", price = BigDecimal("4499.00")))
+            persisted(Item(productId = this, number = "2002", price = BigDecimal("4499.00")))
         }
-        with(persist(lab)) {
-            persist(Item(productId = this, number = "3001", price = BigDecimal("799.00")))
-            persist(Item(productId = this, number = "3002", price = BigDecimal("899.00")))
+        with(persisted(lab)) {
+            persisted(Item(productId = this, number = "3001", price = BigDecimal("799.00")))
+            persisted(Item(productId = this, number = "3002", price = BigDecimal("899.00")))
         }
 
         val product = Products.alias("product")
@@ -353,11 +353,11 @@ class SelectionTest {
 
     @Test
     fun `counting the number of records`() {
-        persist(Order(number = "00000001"))
-        persist(Order(number = "10000002"))
-        persist(Order(number = "10000003"))
-        persist(Order(number = "10000004"))
-        persist(Order(number = "00000005"))
+        persisted(Order(number = "00000001"))
+        persisted(Order(number = "10000002"))
+        persisted(Order(number = "10000003"))
+        persisted(Order(number = "10000004"))
+        persisted(Order(number = "00000005"))
 
         val count =
             Orders
@@ -373,11 +373,11 @@ class SelectionTest {
 
     @Test
     fun `selecting only distinct records`() {
-        val best = persist(frenchie)
-        persist(Item(productId = best, number = "0001"))
-        persist(Item(productId = best, number = "0002"))
-        persist(Item(productId = persist(lab), number = "0003"))
-        persist(Item(productId = persist(boxer), number = "0004"))
+        val best = persisted(frenchie)
+        persisted(Item(productId = best, number = "0001"))
+        persisted(Item(productId = best, number = "0002"))
+        persisted(Item(productId = persisted(lab), number = "0003"))
+        persisted(Item(productId = persisted(boxer), number = "0004"))
 
         val uniques = Products
             .join(Items, "items.product_id = products.id")
@@ -397,12 +397,12 @@ class SelectionTest {
 
     @Test
     fun `counting only distinct records`() {
-        persist(frenchie).also { id ->
-            persist(Item(productId = id, number = "0001", price = BigDecimal.valueOf(100)))
-            persist(Item(productId = id, number = "0002", price = BigDecimal.valueOf(100)))
+        persisted(frenchie).also { id ->
+            persisted(Item(productId = id, number = "0001", price = BigDecimal.valueOf(100)))
+            persisted(Item(productId = id, number = "0002", price = BigDecimal.valueOf(100)))
         }
-        persist(Item(productId = persist(lab), number = "0003", price = BigDecimal.valueOf(100)))
-        persist(Item(productId = persist(boxer), number = "0004", price = BigDecimal.valueOf(100)))
+        persisted(Item(productId = persisted(lab), number = "0003", price = BigDecimal.valueOf(100)))
+        persisted(Item(productId = persisted(boxer), number = "0004", price = BigDecimal.valueOf(100)))
 
         val count = Products
             .join(Items, "items.product_id = products.id")
@@ -421,15 +421,15 @@ class SelectionTest {
 
     @Test
     fun `ordering extracted records, using a literal expression`() {
-        val id = persist(frenchie)
+        val id = persisted(frenchie)
         val one = Item(productId = id, number = "0001", price = BigDecimal(3199))
         val two = Item(productId = id, number = "0002", price = BigDecimal(3299))
         val three = Item(productId = id, number = "0003", price = BigDecimal(3399))
 
-        listOf(one, two, three).forEach { it.id = persist(it)}
+        listOf(one, two, three).forEach { it.id = persisted(it)}
 
         val order = Order(number = "10000001") + one + two + three
-        persist(order).let { order.id = it }
+        persisted(order).let { order.id = it }
 
         val numbers = LineItems
             .slice(LineItems.itemNumber)
@@ -452,15 +452,15 @@ class SelectionTest {
 
     @Test
     fun `ordering extracted records, using a column expression`() {
-        val id = persist(frenchie)
+        val id = persisted(frenchie)
         val one = Item(productId = id, number = "0001", price = BigDecimal(3199))
         val two = Item(productId = id, number = "0002", price = BigDecimal(3299))
         val three = Item(productId = id, number = "0003", price = BigDecimal(3399))
 
-        listOf(one, two, three).forEach { it.id = persist(it)}
+        listOf(one, two, three).forEach { it.id = persisted(it)}
 
         val order = Order(number = "10000001") + one + two + three
-        persist(order).let { order.id = it }
+        persisted(order).let { order.id = it }
 
         val selection = LineItems
             .slice(LineItems.itemNumber)
@@ -478,35 +478,5 @@ class SelectionTest {
                     "WHERE order_id = ${order.id} " +
                     "ORDER BY line_items.order_line DESC"
         )
-    }
-
-
-    private fun persist(product: Product): Int {
-        return transaction {
-            Products.insert(product.record).execute(recorder) get Products.id
-        }
-    }
-
-    private fun persist(item: Item): Int {
-        return transaction {
-            Items.insert(item.record).execute(recorder) get Items.id
-        }
-    }
-
-    private fun persist(order: Order): Int {
-        return transaction {
-            val id = Orders.insert(order.record).execute(recorder) get Orders.id
-            order.lines.forEach {  line ->
-                line.orderId = id
-                LineItems.insert(line.record).execute(recorder)
-            }
-            id
-        }
-    }
-
-    private fun persist(payment: Payment): Int {
-        return transaction {
-            Payments.insert(payment.record).execute(recorder) get Payments.id
-        }
     }
 }

@@ -71,6 +71,10 @@ object BooleanColumnType : ColumnType<Boolean>() {
         val value = rs.getBoolean(index)
         return if (rs.wasNull()) null else value
     }
+
+    override fun toNonNullSql(value: Any): String {
+        return value.toString().uppercase()
+    }
 }
 
 
@@ -164,11 +168,7 @@ object InstantColumnType : ColumnType<Instant>() {
             is Instant -> value
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
-        return "'${ISO_LOCAL_DATE_TIME_FORMATTER.format(instant)}'"
-    }
-
-    private val ISO_LOCAL_DATE_TIME_FORMATTER by lazy {
-        DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+        return "'${Timestamp.from(instant)}'"
     }
 }
 
