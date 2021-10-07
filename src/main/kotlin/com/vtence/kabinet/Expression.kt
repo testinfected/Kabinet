@@ -57,7 +57,7 @@ class SqlStatement(private val prepared: Boolean = false) {
 
     operator fun Argument<*>.unaryPlus(): SqlStatement = appendArgument(this@unaryPlus)
 
-    fun Any?.asArgument(): Expression = asParameterExpression(this)
+    fun Any.asArgument(): Expression = asParameterExpression(this)
 
     fun asSql(): String {
         return sql.toString()
@@ -67,15 +67,29 @@ class SqlStatement(private val prepared: Boolean = false) {
 }
 
 
-private fun asParameterExpression(value: Any?): Expression = when (value) {
-    is Boolean -> QueryParameter(value, BooleanColumnType)
-    is Int -> QueryParameter(value, IntColumnType)
-    is String -> QueryParameter(value, StringColumnType)
-    is BigDecimal -> QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
-    is Instant -> QueryParameter(value, InstantColumnType)
-    is LocalDate -> QueryParameter(value, LocalDateColumnType)
-    else -> QueryParameter(value, ObjectColumnType)
+private fun asParameterExpression(value: Any): Expression = when (value) {
+    is Boolean -> booleanParam(value)
+    is Int -> intParam(value)
+    is String -> stringParam(value)
+    is BigDecimal -> decimalParam(value)
+    is Instant -> instantParam(value)
+    is LocalDate -> dateParam(value)
+    else -> objectParam(value)
 }
+
+fun booleanParam(value: Boolean): Expression = QueryParameter(value, BooleanColumnType)
+
+fun intParam(value: Int): Expression = QueryParameter(value, IntColumnType)
+
+fun stringParam(value: String): Expression = QueryParameter(value, StringColumnType)
+
+fun decimalParam(value: BigDecimal): Expression = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
+
+fun dateParam(value: LocalDate): Expression = QueryParameter(value, LocalDateColumnType)
+
+fun instantParam(value: Instant): Expression = QueryParameter(value, InstantColumnType)
+
+fun objectParam(value: Any): Expression = QueryParameter(value, ObjectColumnType)
 
 
 fun buildStatement(prepared: Boolean = false, body: SqlStatement.() -> Unit): SqlStatement {
