@@ -8,7 +8,7 @@ class Literal<T>(private val expression: String, private val type: ColumnType<T>
         return type.get(rs, index)
     }
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +expression
     }
 
@@ -33,7 +33,7 @@ fun intLiteral(expression: String) = Literal(expression, IntColumnType)
 
 
 class PreparedExpression(private val sql: String, private val parameters: List<Any?>) : Expression {
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         questionMarksOutsideQuotes.split(sql).forEachIndexed { index, fragment ->
             +fragment
             parameters.getOrNull(index)?.let { +it.asArgument() }
@@ -76,7 +76,7 @@ class QueryParameter<T : Any>(
     private val type: ColumnType<T>
 ) : Expression {
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         appendArgument(type, value)
     }
 }

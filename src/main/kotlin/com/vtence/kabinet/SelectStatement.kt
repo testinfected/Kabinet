@@ -34,7 +34,7 @@ class SelectStatement(
         orderByClauses += expression
     }
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         append("SELECT ")
         if (count && distinct) {
             append("COUNT(DISTINCT (")

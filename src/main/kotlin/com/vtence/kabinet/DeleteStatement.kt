@@ -9,7 +9,7 @@ class DeleteStatement(private val table: Table): Expression, Preparable {
         whereClause = clause
     }
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         append("DELETE FROM ")
         append(table)
         whereClause?.let {

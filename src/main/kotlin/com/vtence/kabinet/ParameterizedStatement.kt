@@ -15,7 +15,7 @@ class ParameterizedStatement(private val sql: String) : Preparable, Expression {
         data[":$name"] = value
     }
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         val (sql, args) = prepareSql()
         +sql.asExpression(args)
     }

@@ -9,7 +9,7 @@ class UpdateStatement(private val set: ColumnSet, private val values: Iterable<A
         whereClause = clause
     }
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         append("UPDATE ")
         +set
         append(" SET ")

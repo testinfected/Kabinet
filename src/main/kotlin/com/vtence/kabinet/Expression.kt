@@ -7,33 +7,34 @@ import java.time.LocalTime
 
 
 fun interface Expression {
-    fun build(statement: SqlStatement)
+    fun build(statement: SqlBuilder)
 
     companion object {
-        fun build(builder: SqlStatement.() -> Unit) = Expression { builder(it) }
+        fun build(builder: SqlBuilder.() -> Unit) = Expression { builder(it) }
     }
 }
 
 
 typealias Argument<T> = Pair<ColumnType<T>, T?>
 
-class SqlStatement(private val prepared: Boolean = false) {
+
+abstract class SqlBuilder(private val prepared: Boolean = false) {
     private val sql = StringBuilder()
     private val args = mutableListOf<Argument<*>>()
 
     val arguments: List<Argument<*>> get() = args
 
-    operator fun invoke(body: SqlStatement.() -> Unit): Unit = body()
+    operator fun invoke(body: SqlBuilder.() -> Unit): Unit = body()
 
-    fun append(text: String): SqlStatement = apply { sql.append(text) }
+    fun append(text: String): SqlBuilder = apply { sql.append(text) }
 
-    fun appendValue(value: Any): SqlStatement = apply { sql.append(value) }
+    fun appendValue(value: Any): SqlBuilder = apply { sql.append(value) }
 
-    fun append(expr: Expression): SqlStatement = apply(expr::build)
+    fun append(expr: Expression): SqlBuilder = apply(expr::build)
 
-    fun appendArgument(argument: Argument<*>): SqlStatement = appendArgument(argument.first, argument.second)
+    fun appendArgument(argument: Argument<*>): SqlBuilder = appendArgument(argument.first, argument.second)
 
-    fun appendArgument(type: ColumnType<*>, value: Any?): SqlStatement = apply {
+    fun appendArgument(type: ColumnType<*>, value: Any?): SqlBuilder = apply {
         if (prepared) append("?") else append(type.toSql(value))
         args.add(type to value)
     }
@@ -42,7 +43,7 @@ class SqlStatement(private val prepared: Boolean = false) {
         separator: CharSequence = ", ",
         prefix: CharSequence = "",
         postfix: CharSequence = "",
-        transform: SqlStatement.(T) -> Unit
+        transform: SqlBuilder.(T) -> Unit
     ) {
         sql.append(prefix)
         forEachIndexed { index, element ->
@@ -52,11 +53,11 @@ class SqlStatement(private val prepared: Boolean = false) {
         sql.append(postfix)
     }
 
-    operator fun String.unaryPlus(): SqlStatement = append(this)
+    operator fun String.unaryPlus(): SqlBuilder = append(this)
 
-    operator fun Expression.unaryPlus(): SqlStatement = append(this@unaryPlus)
+    operator fun Expression.unaryPlus(): SqlBuilder = append(this@unaryPlus)
 
-    operator fun Argument<*>.unaryPlus(): SqlStatement = appendArgument(this@unaryPlus)
+    operator fun Argument<*>.unaryPlus(): SqlBuilder = appendArgument(this@unaryPlus)
 
     fun Any.asArgument(): Expression = asParameterExpression(this)
 
@@ -65,6 +66,17 @@ class SqlStatement(private val prepared: Boolean = false) {
     }
 
     override fun toString(): String = asSql()
+}
+
+
+class SqlStatement(prepared: Boolean): SqlBuilder(prepared) {
+    companion object {
+        fun prepared(build: SqlBuilder.() -> Unit): SqlBuilder = SqlStatement(prepared = true).apply {
+            this.build()
+        }
+
+        fun plain(): SqlBuilder = SqlStatement(prepared = false)
+    }
 }
 
 
@@ -96,15 +108,15 @@ fun timeParam(value: LocalTime): Expression = QueryParameter(value, LocalTimeCol
 fun objectParam(value: Any): Expression = QueryParameter(value, ObjectColumnType)
 
 
-fun buildStatement(prepared: Boolean = false, body: SqlStatement.() -> Unit): SqlStatement {
+fun buildStatement(prepared: Boolean = false, body: SqlBuilder.() -> Unit): SqlBuilder {
     return SqlStatement(prepared).apply(body)
 }
 
-fun buildSql(prepared: Boolean = false, body: SqlStatement.() -> Unit): String {
+fun buildSql(prepared: Boolean = false, body: SqlBuilder.() -> Unit): String {
     return buildStatement(prepared, body).asSql()
 }
 
 fun Expression.toSql(prepared: Boolean = false) = buildSql(prepared) { +this@toSql }
 
-fun Expression.arguments(): List<Argument<*>> = SqlStatement(true).append(this).arguments
+fun Expression.arguments(): List<Argument<*>> = SqlStatement.prepared { +this@arguments }.arguments
 

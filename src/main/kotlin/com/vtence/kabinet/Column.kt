@@ -27,7 +27,7 @@ class Column<T>(
 
     private fun replaceBy(column: Column<*>) = table.replaceColumn(this, column)
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +qualifiedName
     }
 

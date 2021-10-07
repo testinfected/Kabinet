@@ -37,7 +37,7 @@ open class Table(name: String) : ColumnSet {
     override val source: ColumnSet get() = this
     override val columns: List<Column<*>> get() = _columns
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +tableName
     }
 
@@ -76,7 +76,7 @@ open class Table(name: String) : ColumnSet {
 
 
 class Slice(override val source: ColumnSet, override val fields: List<Field<*>>) : FieldSet {
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +source
     }
 }
@@ -93,7 +93,7 @@ fun ColumnSet.select(column: Field<*>, vararg more: Field<*>): Select = Select.f
 class TableSlice(override val source: Table, columns: List<Column<*>>) : ColumnSet {
     override val columns: List<Column<*>> = columns.map { source[it] }
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +source
     }
 }
@@ -114,7 +114,7 @@ class Join(
 
     override val columns: List<Column<*>> get() = table.columns + otherTable.columns
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +table
         append(" $type JOIN ")
         +otherTable
@@ -133,7 +133,7 @@ class JoinPart(
     private val otherColumn: Column<*>,
     private val additionalConstraint: Expression?
 ) : Expression {
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +onColumn
         +" = "
         +otherColumn

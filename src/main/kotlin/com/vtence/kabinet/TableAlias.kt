@@ -5,7 +5,7 @@ class TableAlias<out T : Table>(val delegate: T, private val alias: String) : Ta
 
     override val tableName: String get() = alias
 
-    override fun build(statement: SqlStatement) = statement {
+    override fun build(statement: SqlBuilder) = statement {
         +aliasedTableName
     }
 
