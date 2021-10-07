@@ -147,8 +147,7 @@ class ExpressionParametersTest {
             it.id = persist(it)
         }
 
-        persist(paid.paymentOn(LocalDate.parse("2021-10-05")))
-        persist(paid.paymentOn(LocalDate.parse("2020-08-05")))
+        persist(paid.paymentAt(LocalDate.parse("2021-10-05").atStartOfDay()))
 
         val dates =
             Payments
@@ -162,6 +161,29 @@ class ExpressionParametersTest {
 
         recorder.assertSql(
             "SELECT payments.date FROM payments WHERE date > '2021-01-01'"
+        )
+    }
+
+    @Test
+    fun `using local times in expressions`() {
+        val paid = Order(number = "10000000").also {
+            it.id = persist(it)
+        }
+
+        persist(paid.paymentAt(LocalDate.now().atTime(LocalTime.parse("15:00"))))
+
+        val dates =
+            Payments
+                .slice(Payments.time)
+                .selectWhere("time > ?", LocalTime.parse("13:00"))
+                .list(recorder) { it[Payments.time] }
+
+        assertThat(
+            "dates", dates, hasElement(LocalTime.parse("15:00"))
+        )
+
+        recorder.assertSql(
+            "SELECT payments.time FROM payments WHERE time > '13:00:00'"
         )
     }
 }

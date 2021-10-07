@@ -1,0 +1,14 @@
+ALTER TABLE payments
+    ADD COLUMN time TIME NOT NULL;
+
+UPDATE payments
+SET date = SELECT CURRENT_DATE;
+
+ALTER TABLE payments
+    ALTER date SET NOT NULL;
+
+UPDATE payments
+SET time = SELECT CURRENT_TIME;
+
+ALTER TABLE payments
+    ALTER time SET NOT NULL;

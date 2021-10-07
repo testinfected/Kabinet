@@ -5,6 +5,7 @@ import java.math.RoundingMode
 import java.sql.*
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -186,7 +187,7 @@ object LocalDateColumnType : ColumnType<LocalDate>() {
     override fun toNonNullSql(value: Any): String {
         val date = when (value) {
             is LocalDate -> value
-            else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+            else -> error("Unexpected value: `$value` has type ${value::class.qualifiedName}")
         }
 
         return "'${ISO_DATE_FORMATTER.format(date)}'"
@@ -197,3 +198,26 @@ object LocalDateColumnType : ColumnType<LocalDate>() {
     }
 }
 
+
+object LocalTimeColumnType : ColumnType<LocalTime>() {
+    override val sqlType = JDBCType.TIME
+
+    @Suppress("UNCHECKED_CAST")
+    override fun nullable() = this as ColumnType<LocalTime?>
+
+    override fun get(rs: ResultSet, index: Int): LocalTime? {
+        return rs.getTime(index)?.toLocalTime()
+    }
+
+    override fun toNonNullSql(value: Any): String {
+        val instant = when (value) {
+            is LocalTime -> value
+            else -> error("Unexpected value `$value` has type ${value::class.qualifiedName}")
+        }
+        return "'${ISO_TIME_FORMATTER.format(instant)}'"
+    }
+
+    private val ISO_TIME_FORMATTER by lazy {
+        DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+    }
+}

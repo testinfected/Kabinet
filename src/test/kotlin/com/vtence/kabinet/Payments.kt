@@ -4,17 +4,20 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 
 data class Payment(
     val id: Int? = null,
     val orderId: Int,
     val amount: BigDecimal,
-    val date: LocalDate
+    val date: LocalDate,
+    val time: LocalTime
 )
 
-fun Order.paymentOn(date: LocalDate): Payment {
-    return Payment(orderId = checkNotNull(id), amount = total, date = date)
+fun Order.paymentAt(moment: LocalDateTime): Payment {
+    return Payment(orderId = checkNotNull(id), amount = total, date = moment.toLocalDate(), time = moment.toLocalTime())
 }
 
 
@@ -23,12 +26,14 @@ object Payments : Table("payments") {
     val orderId = int("order_id")
     val amount = decimal("amount", 12, 2)
     val date = date("date")
+    val time = time("time")
 }
 
 private fun dehydrate(payment: Payment): Payments.(Dataset) -> Unit = {
     it[orderId] = payment.orderId
     it[amount] = payment.amount
     it[date] = payment.date
+    it[time] = payment.time
 }
 
 fun Payments.hydrate(row: ResultRow): Payment {
@@ -37,6 +42,7 @@ fun Payments.hydrate(row: ResultRow): Payment {
         orderId = row[orderId],
         amount = row[amount],
         date = row[date],
+        time = row[time]
     )
 }
 

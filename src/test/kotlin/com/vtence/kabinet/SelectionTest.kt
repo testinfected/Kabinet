@@ -11,6 +11,8 @@ import com.vtence.kabinet.Products.name
 import com.vtence.kabinet.Products.number
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -290,7 +292,7 @@ class SelectionTest {
             it.id = persisted(it)
         }
 
-        persisted(paid.paymentOn(LocalDate.parse("2021-12-25")))
+        persisted(paid.paymentAt(LocalDateTime.parse("2021-12-25T15:00")))
 
         val selection =
             Orders

@@ -4,6 +4,7 @@ import java.math.BigDecimal
 import java.sql.ResultSet
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 
 
 interface Field<T> : Expression {
@@ -52,6 +53,8 @@ open class Table(name: String) : ColumnSet {
     fun timestamp(name: String): Column<Instant> = addColumn(name, InstantColumnType)
 
     fun date(name: String): Column<LocalDate> = addColumn(name, LocalDateColumnType)
+
+    fun time(name: String): Column<LocalTime> = addColumn(name, LocalTimeColumnType)
 
     @Suppress("UNCHECKED_CAST")
     open operator fun <T : Any?> get(column: Column<T>): Column<T> =

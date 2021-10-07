@@ -3,6 +3,7 @@ package com.vtence.kabinet
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 
 
 fun interface Expression {
@@ -74,6 +75,7 @@ private fun asParameterExpression(value: Any): Expression = when (value) {
     is BigDecimal -> decimalParam(value)
     is Instant -> instantParam(value)
     is LocalDate -> dateParam(value)
+    is LocalTime -> timeParam(value)
     else -> objectParam(value)
 }
 
@@ -85,9 +87,11 @@ fun stringParam(value: String): Expression = QueryParameter(value, StringColumnT
 
 fun decimalParam(value: BigDecimal): Expression = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
 
+fun instantParam(value: Instant): Expression = QueryParameter(value, InstantColumnType)
+
 fun dateParam(value: LocalDate): Expression = QueryParameter(value, LocalDateColumnType)
 
-fun instantParam(value: Instant): Expression = QueryParameter(value, InstantColumnType)
+fun timeParam(value: LocalTime): Expression = QueryParameter(value, LocalTimeColumnType)
 
 fun objectParam(value: Any): Expression = QueryParameter(value, ObjectColumnType)
 
