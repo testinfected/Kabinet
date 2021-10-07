@@ -53,9 +53,9 @@ object ObjectColumnType : ColumnType<Any>() {
         is String -> StringColumnType.toNonNullSql(value)
         is Boolean -> BooleanColumnType.toNonNullSql(value)
         is Int, Long -> IntColumnType.toNonNullSql(value)
+        is BigDecimal -> DecimalColumnType(value.precision(), value.scale()).toNonNullSql(value)
         is LocalDate -> LocalDateColumnType.toNonNullSql(value)
         is Instant -> InstantColumnType.toNonNullSql(value)
-        // TODO
         else -> value.toString()
     }
 }

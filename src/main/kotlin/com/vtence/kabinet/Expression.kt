@@ -7,6 +7,10 @@ import java.time.LocalDate
 
 fun interface Expression {
     fun build(statement: SqlStatement)
+
+    companion object {
+        fun build(builder: SqlStatement.() -> Unit) = Expression { builder(it) }
+    }
 }
 
 
@@ -53,7 +57,7 @@ class SqlStatement(private val prepared: Boolean = false) {
 
     operator fun Argument<*>.unaryPlus(): SqlStatement = appendArgument(this@unaryPlus)
 
-    fun Any?.asArgument(): Expression = toExpression(this)
+    fun Any?.asArgument(): Expression = asParameterExpression(this)
 
     fun asSql(): String {
         return sql.toString()
@@ -63,14 +67,13 @@ class SqlStatement(private val prepared: Boolean = false) {
 }
 
 
-private fun toExpression(value: Any?): Expression = when (value) {
+private fun asParameterExpression(value: Any?): Expression = when (value) {
     is Boolean -> QueryParameter(value, BooleanColumnType)
     is Int -> QueryParameter(value, IntColumnType)
     is String -> QueryParameter(value, StringColumnType)
     is BigDecimal -> QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
     is Instant -> QueryParameter(value, InstantColumnType)
     is LocalDate -> QueryParameter(value, LocalDateColumnType)
-    // TODO
     else -> QueryParameter(value, ObjectColumnType)
 }
 

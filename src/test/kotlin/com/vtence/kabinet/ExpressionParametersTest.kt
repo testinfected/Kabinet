@@ -36,7 +36,10 @@ class ExpressionParametersTest {
 
         val selection =
             Products
-                .selectWhere("name like ?", "Great%")
+                .selectWhere {
+                    +"name LIKE "
+                    +"Great%".asArgument()
+                }
                 .list(recorder) { it.product }
 
         assertThat(
@@ -46,7 +49,7 @@ class ExpressionParametersTest {
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description " +
                     "FROM products " +
-                    "WHERE name like 'Great%'"
+                    "WHERE name LIKE 'Great%'"
         )
     }
 

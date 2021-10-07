@@ -59,6 +59,9 @@ fun <T : FieldSet> T.selectAll(): Query = Select.from(this)
 fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query =
     selectWhere(clause.asExpression(*args))
 
+fun <T : FieldSet> T.selectWhere(expression: SqlStatement.() -> Unit): Query =
+    selectWhere(Expression.build(expression))
+
 fun <T : FieldSet> T.selectWhere(expression: Expression): Query =
     Select.from(this).where(expression)
 
