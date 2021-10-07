@@ -39,10 +39,11 @@ class Select(private val from: FieldSet) : Query() {
         return executor.execute(statement.prepare { hydrate(it.executeQuery()) })
     }
 
-    private fun <T> read(rs: ResultSet, hydrate: Hydrator<T>): List<T> {
+    private fun <T> read(rs: ResultSet, items: Hydrator<T>): List<T> {
         val result = mutableListOf<T>()
         while (rs.next()) {
-            result += hydrate(ResultRow.readFrom(rs, from.fields))
+            val row = ResultRow.readFrom(rs, from.fields)
+            result += row[items]
         }
         return result.toList()
     }

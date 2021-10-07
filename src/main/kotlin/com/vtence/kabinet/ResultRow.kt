@@ -77,3 +77,5 @@ fun ResultSet.read(fields: List<Field<*>>): List<ResultRow> {
     return results.toList()
 }
 
+
+operator fun <T> ResultRow.get(hydrator: Hydrator<T>): T = hydrator(this)
