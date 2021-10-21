@@ -48,11 +48,9 @@ class SelectStatement(
         } else {
             from.fields.join { +it }
         }
-        append(" FROM ")
-        +from.source
+        append(" FROM ", from.source)
         whereClause?.let {
-            append(" WHERE ")
-            +it
+            append(" WHERE ", it)
         }
         if (orderByClauses.isNotEmpty()) {
             append(" ORDER BY ")
@@ -62,8 +60,8 @@ class SelectStatement(
         }
 
         limit?.let { count ->
-            append(" LIMIT ").appendValue(count)
-            if (offset > 0) append(" OFFSET ").appendValue(offset)
+            append(" LIMIT ", count)
+            if (offset > 0) append(" OFFSET ", offset)
         }
     }
 

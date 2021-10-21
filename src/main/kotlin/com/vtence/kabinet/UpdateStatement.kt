@@ -10,9 +10,7 @@ class UpdateStatement(private val set: ColumnSet, private val values: Iterable<A
     }
 
     override fun build(statement: SqlBuilder) = statement {
-        append("UPDATE ")
-        +set
-        append(" SET ")
+        append("UPDATE ", set, " SET ")
         set.columns.zip(values).join { (column, value) ->
             +column.unqualified()
             append(" = ")

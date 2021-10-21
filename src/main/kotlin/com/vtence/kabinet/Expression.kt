@@ -9,6 +9,8 @@ import java.time.LocalTime
 fun interface Expression {
     fun build(statement: SqlBuilder)
 
+    fun Any.asArgument() = toQueryParameter(this)
+
     companion object {
         fun build(builder: SqlBuilder.() -> Unit) = Expression { builder(it) }
     }
@@ -59,13 +61,25 @@ abstract class SqlBuilder(private val prepared: Boolean = false) {
 
     operator fun Argument<*>.unaryPlus(): SqlBuilder = appendArgument(this@unaryPlus)
 
-    fun Any.asArgument(): Expression = asParameterExpression(this)
+    fun Any.asArgument(): Expression = toQueryParameter(this)
 
     fun asSql(): String {
         return sql.toString()
     }
 
     override fun toString(): String = asSql()
+}
+
+
+fun SqlBuilder.append(vararg expressions: Any): SqlBuilder = apply {
+    for (value in expressions) {
+        when (value) {
+            is Char -> append(value.toString())
+            is String -> append(value)
+            is Expression -> append(value)
+            else -> appendValue(value)
+        }
+    }
 }
 
 
@@ -80,7 +94,7 @@ class SqlStatement(prepared: Boolean): SqlBuilder(prepared) {
 }
 
 
-private fun asParameterExpression(value: Any): Expression = when (value) {
+private fun toQueryParameter(value: Any): Expression = when (value) {
     is Boolean -> booleanParam(value)
     is Int -> intParam(value)
     is String -> stringParam(value)

@@ -10,11 +10,9 @@ class DeleteStatement(private val table: Table): Expression, Preparable {
     }
 
     override fun build(statement: SqlBuilder) = statement {
-        append("DELETE FROM ")
-        append(table)
+        append("DELETE FROM ", table)
         whereClause?.let {
-            append(" WHERE ")
-            +it
+            append(" WHERE ", it)
         }
     }
 
