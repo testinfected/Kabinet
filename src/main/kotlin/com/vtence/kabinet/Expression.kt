@@ -83,7 +83,7 @@ fun SqlBuilder.append(vararg expressions: Any): SqlBuilder = apply {
 }
 
 
-class SqlStatement(prepared: Boolean): SqlBuilder(prepared) {
+class SqlStatement(prepared: Boolean) : SqlBuilder(prepared) {
     companion object {
         fun prepared(build: SqlBuilder.() -> Unit): SqlBuilder = SqlStatement(prepared = true).apply {
             this.build()
@@ -111,7 +111,8 @@ fun intParam(value: Int): Expression = QueryParameter(value, IntColumnType)
 
 fun stringParam(value: String): Expression = QueryParameter(value, StringColumnType)
 
-fun decimalParam(value: BigDecimal): Expression = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
+fun decimalParam(value: BigDecimal): Expression =
+    QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
 
 fun instantParam(value: Instant): Expression = QueryParameter(value, InstantColumnType)
 

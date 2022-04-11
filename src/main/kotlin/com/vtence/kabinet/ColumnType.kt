@@ -147,8 +147,16 @@ class DecimalColumnType(
 }
 
 
+/**
+ * Store `Instant` as a timestamp within UTC timezone, since it represents a point on the timeline.
+ * `LocalDate` uses a timestamp (without timezone) instead.
+ */
 object InstantColumnType : ColumnType<Instant>() {
-    override val sqlType = JDBCType.TIMESTAMP
+    override val sqlType = JDBCType.TIMESTAMP_WITH_TIMEZONE
+
+    // Since instant is a point on the timeline, tell the JDBC driver
+    // to use the UTC timezone
+    private val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
     @Suppress("UNCHECKED_CAST")
     override fun nullable() = this as ColumnType<Instant?>
@@ -160,8 +168,17 @@ object InstantColumnType : ColumnType<Instant>() {
         }
     }
 
+    override fun set(statement: PreparedStatement, index: Int, value: Any?) {
+        when(value) {
+            is Instant -> statement.setTimestamp(index, Timestamp.from(value), utc)
+            null -> statement.setNull(index, sqlType.vendorTypeNumber)
+            else -> statement.setObject(index, value, sqlType.vendorTypeNumber)
+        }
+    }
+
+
     override fun get(rs: ResultSet, index: Int): Instant? {
-        return rs.getTimestamp(index)?.toInstant()
+        return rs.getTimestamp(index, utc)?.toInstant()
     }
 
     override fun toNonNullSql(value: Any): String {
