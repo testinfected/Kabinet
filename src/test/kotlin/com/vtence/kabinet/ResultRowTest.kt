@@ -10,6 +10,7 @@ import kotlin.test.Test
 val product = Products
 val alternate = Products.alias("alternate")
 val item = Items
+val orders = Orders
 
 class ResultRowTest {
 
@@ -21,6 +22,9 @@ class ResultRowTest {
             product.description to 3,
             item.id to 4,
             item.number to 5,
+            orders.id to 6,
+            orders.number to 7,
+            orders.placedAt to 8
         )
     )
 
@@ -44,6 +48,30 @@ class ResultRowTest {
     @Test
     fun `complains of null value for non-nullable column`() {
         assertThat({ row[product.name] }, throws<IllegalStateException>())
+    }
+
+    @Test
+    fun `tells if value is non null`() {
+        row[product.id] = 1
+        assertThat("existing value", row.contains(product.id), equalTo(true))
+
+        row[product.name] = null
+        assertThat("missing non nullable value", row.contains(product.name), equalTo(false))
+
+        row[product.description] = null
+        assertThat("missing nullable value", row.contains(product.description), equalTo(false))
+    }
+
+    @Test
+    fun `tells if any value from field set is non null`() {
+        row[orders.id] = null
+        row[orders.number] = null
+        row[orders.placedAt] = null
+
+        assertThat("with only null values", row.contains(orders), equalTo(false))
+
+        row[orders.id] = 1
+        assertThat("with non null values", row.contains(orders), equalTo(true))
     }
 
     @Test

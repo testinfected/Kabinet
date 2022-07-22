@@ -25,10 +25,15 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
         return value as T
     }
 
-    private fun <T> getOrNull(field: Field<T>): Any? {
+    fun <T> getOrNull(field: Field<T>): T? {
         val index = fields[field] ?: error("'$field' not in result set")
-        return data[index]
+        @Suppress("UNCHECKED_CAST")
+        return data[index] as T?
     }
+
+    operator fun contains(field: Field<*>) = getOrNull(field) != null
+
+    operator fun contains(fields: FieldSet) = fields.fields.any { contains(it) }
 
     operator fun <T> set(field: Field<out T>, value: T) {
         val index = fields[field] ?: error("$field is not in record set")
