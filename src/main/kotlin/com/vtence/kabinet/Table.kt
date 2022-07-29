@@ -7,12 +7,19 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 
-interface Field<T> : Expression {
-    fun get(rs: ResultSet, index: Int): T?
+interface Field<T> : Expression<T> {
+    val type: ColumnType<T>
+
+    fun T.asParameter(): Expression<T> = toQueryParameter(this, type)
 }
 
 
-interface FieldSet : Expression {
+fun <T> Field<T>.get(rs: ResultSet, index: Int): T? {
+    return type.get(rs, index)
+}
+
+
+interface FieldSet : Expression<Nothing> {
     val source: ColumnSet
 
     val fields: List<Field<*>>
@@ -119,7 +126,7 @@ class Join(
     private val table: ColumnSet,
     private val otherTable: ColumnSet,
     private val type: JoinType = JoinType.INNER,
-    private val condition: Expression,
+    private val condition: Expression<Boolean>,
 ) : ColumnSet {
 
     override val source: ColumnSet = this
@@ -143,8 +150,8 @@ enum class JoinType {
 class JoinPart(
     private val onColumn: Column<*>,
     private val otherColumn: Column<*>,
-    private val additionalConstraint: Expression?,
-) : Expression {
+    private val additionalConstraint: Expression<Boolean>?,
+) : Expression<Boolean> {
     override fun build(statement: SqlBuilder) = statement {
         +onColumn
         +" = "
@@ -157,7 +164,7 @@ class JoinPart(
 }
 
 
-fun ColumnSet.join(otherTable: ColumnSet, condition: Expression): Join {
+fun ColumnSet.join(otherTable: ColumnSet, condition: Expression<Boolean>): Join {
     return Join(this, otherTable, JoinType.INNER, condition)
 }
 
@@ -165,7 +172,7 @@ fun ColumnSet.join(
     otherTable: ColumnSet,
     onColumn: Column<*>,
     otherColumn: Column<*>,
-    additionalConstraint: Expression? = null,
+    additionalConstraint: Expression<Boolean>? = null,
 ): Join {
     return join(otherTable, JoinPart(onColumn, otherColumn, additionalConstraint))
 }
@@ -183,7 +190,7 @@ fun ColumnSet.join(otherTable: ColumnSet, condition: String, vararg parameters: 
     join(otherTable, condition.asExpression(*parameters))
 
 
-fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: Expression): Join {
+fun ColumnSet.leftJoin(otherTable: ColumnSet, condition: Expression<Boolean>): Join {
     return Join(this, otherTable, JoinType.LEFT, condition)
 }
 
@@ -191,7 +198,7 @@ fun ColumnSet.leftJoin(
     otherTable: ColumnSet,
     onColumn: Column<*>,
     otherColumn: Column<*>,
-    additionalConstraint: Expression? = null,
+    additionalConstraint: Expression<Boolean>? = null,
 ): Join {
     return leftJoin(otherTable, JoinPart(onColumn, otherColumn, additionalConstraint))
 }

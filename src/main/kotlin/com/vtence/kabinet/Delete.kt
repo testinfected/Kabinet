@@ -9,7 +9,7 @@ class Delete(table: Table): Command {
         })
     }
 
-    fun where(expression: Expression): Command = apply {
+    fun where(expression: Expression<Boolean>): Command = apply {
         statement.where(expression)
     }
 
@@ -22,9 +22,9 @@ class Delete(table: Table): Command {
 fun Table.deleteAll(executor: StatementExecutor) =
     Delete.from(this).execute(executor)
 
-fun Table.deleteWhere(condition: String, vararg parameters: Any?): Command =
-    deleteWhere(condition.asExpression(*parameters))
+fun Table.deleteWhere(condition: String, vararg arguments: Any): Command =
+    deleteWhere(condition.asExpression(*arguments))
 
-fun Table.deleteWhere(expression: Expression):Command =
+fun Table.deleteWhere(expression: Expression<Boolean>):Command =
     Delete.from(this).where(expression)
 

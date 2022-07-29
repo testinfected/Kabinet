@@ -2,10 +2,10 @@ package com.vtence.kabinet
 
 import java.sql.PreparedStatement
 
-class DeleteStatement(private val table: Table): Expression, Preparable {
-    private var whereClause: Expression? = null
+class DeleteStatement(private val table: Table): Expression<Nothing>, Preparable {
+    private var whereClause: Expression<Boolean>? = null
 
-    fun where(clause: Expression): DeleteStatement = apply {
+    fun where(clause: Expression<Boolean>): DeleteStatement = apply {
         whereClause = clause
     }
 

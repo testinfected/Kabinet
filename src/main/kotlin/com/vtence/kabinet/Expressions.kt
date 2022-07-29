@@ -1,13 +1,7 @@
 package com.vtence.kabinet
 
-import java.sql.ResultSet
 
-
-class Literal<T>(private val expression: String, private val type: ColumnType<T>) : Field<T> {
-    override fun get(rs: ResultSet, index: Int): T? {
-        return type.get(rs, index)
-    }
-
+class Literal<T>(private val expression: String, override val type: ColumnType<T>) : Field<T> {
     override fun build(statement: SqlBuilder) = statement {
         +expression
     }
@@ -17,6 +11,7 @@ class Literal<T>(private val expression: String, private val type: ColumnType<T>
         if (other !is Literal<*>) return false
 
         if (expression != other.expression) return false
+        if (type != other.type) return false
 
         return true
     }
@@ -32,11 +27,13 @@ class Literal<T>(private val expression: String, private val type: ColumnType<T>
 fun intLiteral(expression: String) = Literal(expression, IntColumnType)
 
 
-class PreparedExpression(private val sql: String, private val parameters: List<Any?>) : Expression {
+class PreparedExpression<T>(private val sql: String, private val params: List<Any?>) : Expression<T> {
     override fun build(statement: SqlBuilder) = statement {
         questionMarksOutsideQuotes.split(sql).forEachIndexed { index, fragment ->
-            +fragment
-            parameters.getOrNull(index)?.let { +it.asArgument() }
+            if (fragment.isNotBlank()) {
+                +fragment
+                if (index < params.size) +params[index].toArgument(AutoDetectColumnType.nullable())
+            }
         }
     }
 
@@ -60,21 +57,21 @@ class PreparedExpression(private val sql: String, private val parameters: List<A
          *
          *     (?:(?!\1).)*
          */
-        val questionMarksOutsideQuotes =
+        private val questionMarksOutsideQuotes =
             Regex("""(?<!\?)\?(?!\?)(?=(?:[^"']*(["'])(?:(?!\1).)*\1)*[^"']*$)""")
     }
 }
 
 
-fun String.asExpression(vararg parameters: Any?) = asExpression(parameters.toList())
+fun <T> String.asExpression(vararg arguments: Any?) = asExpression<T>(arguments.toList())
 
-fun String.asExpression(parameters: List<Any?>) = PreparedExpression(this, parameters)
+fun <T> String.asExpression(arguments: Iterable<Any?>) = PreparedExpression<T>(this, arguments.toList())
 
 
-class QueryParameter<T : Any>(
-    private val value: T?,
+class QueryParameter<T>(
+    private val value: T,
     private val type: ColumnType<T>
-) : Expression {
+) : Expression<T> {
 
     override fun build(statement: SqlBuilder) = statement {
         appendArgument(type, value)

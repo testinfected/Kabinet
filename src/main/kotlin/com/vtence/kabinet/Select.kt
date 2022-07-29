@@ -9,7 +9,7 @@ class Select(private val from: FieldSet) : Query() {
 
     fun where(clause: String, vararg args: Any?): Query = where(clause.asExpression(*args))
 
-    fun where(clause: Expression): Query = apply {
+    fun where(clause: Expression<Boolean>): Query = apply {
         statement.where(clause)
     }
 
@@ -17,7 +17,7 @@ class Select(private val from: FieldSet) : Query() {
         statement.distinctOnly()
     }
 
-    override fun orderBy(expression: Expression): Query = apply {
+    override fun orderBy(expression: Expression<Nothing>): Query = apply {
         statement.orderBy(expression)
     }
 
@@ -55,20 +55,20 @@ class Select(private val from: FieldSet) : Query() {
     }
 }
 
-fun <T : FieldSet> T.selectAll(): Query = Select.from(this)
+fun FieldSet.selectAll(): Query = Select.from(this)
 
-fun <T : FieldSet> T.selectWhere(clause: String, vararg args: Any?): Query =
+fun FieldSet.selectWhere(clause: String, vararg args: Any?): Query =
     selectWhere(clause.asExpression(*args))
 
-fun <T : FieldSet> T.selectWhere(expression: SqlBuilder.() -> Unit): Query =
+fun FieldSet.selectWhere(expression: SqlBuilder.() -> Unit): Query =
     selectWhere(Expression.build(expression))
 
-fun <T : FieldSet> T.selectWhere(expression: Expression): Query =
+fun FieldSet.selectWhere(expression: Expression<Boolean>): Query =
     Select.from(this).where(expression)
 
-fun <T : FieldSet, R> T.selectAll(executor: StatementExecutor, hydrate: Hydrator<R>): List<R> =
+fun <R> FieldSet.selectAll(executor: StatementExecutor, hydrate: Hydrator<R>): List<R> =
     Select.from(this).list(executor, hydrate)
 
-fun <T : FieldSet, R> T.selectAll(connection: Connection, hydrate: Hydrator<R>): List<R> =
+fun <R> FieldSet.selectAll(connection: Connection, hydrate: Hydrator<R>): List<R> =
     selectAll(StatementExecutor(connection), hydrate)
 

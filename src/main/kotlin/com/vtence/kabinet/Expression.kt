@@ -6,18 +6,16 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 
-fun interface Expression {
+fun interface Expression<T> {
     fun build(statement: SqlBuilder)
 
-    fun Any.asArgument() = toQueryParameter(this)
-
     companion object {
-        fun build(builder: SqlBuilder.() -> Unit) = Expression { builder(it) }
+        fun <T> build(build: SqlBuilder.() -> Unit): Expression<T> = Expression { it.build() }
     }
 }
 
 
-typealias Argument<T> = Pair<ColumnType<T>, T?>
+typealias Argument<T> = Pair<ColumnType<T>, T>
 
 
 abstract class SqlBuilder(private val prepared: Boolean = false) {
@@ -32,7 +30,7 @@ abstract class SqlBuilder(private val prepared: Boolean = false) {
 
     fun appendValue(value: Any): SqlBuilder = apply { sql.append(value) }
 
-    fun append(expr: Expression): SqlBuilder = apply(expr::build)
+    fun append(expr: Expression<*>): SqlBuilder = apply(expr::build)
 
     fun appendArgument(argument: Argument<*>): SqlBuilder = appendArgument(argument.first, argument.second)
 
@@ -57,11 +55,11 @@ abstract class SqlBuilder(private val prepared: Boolean = false) {
 
     operator fun String.unaryPlus(): SqlBuilder = append(this)
 
-    operator fun Expression.unaryPlus(): SqlBuilder = append(this@unaryPlus)
+    operator fun Expression<*>.unaryPlus(): SqlBuilder = append(this@unaryPlus)
 
     operator fun Argument<*>.unaryPlus(): SqlBuilder = appendArgument(this@unaryPlus)
 
-    fun Any.asArgument(): Expression = toQueryParameter(this)
+    fun <T> T.toArgument(type: ColumnType<T>): Expression<T> = toQueryParameter(this, type)
 
     fun asSql(): String {
         return sql.toString()
@@ -76,7 +74,7 @@ fun SqlBuilder.append(vararg expressions: Any): SqlBuilder = apply {
         when (value) {
             is Char -> append(value.toString())
             is String -> append(value)
-            is Expression -> append(value)
+            is Expression<*> -> append(value)
             else -> appendValue(value)
         }
     }
@@ -94,44 +92,39 @@ class SqlStatement(prepared: Boolean) : SqlBuilder(prepared) {
 }
 
 
-private fun toQueryParameter(value: Any): Expression = when (value) {
+@Suppress("UNCHECKED_CAST")
+fun <T> toQueryParameter(value: T, type: ColumnType<T>): Expression<T> = when (value) {
     is Boolean -> booleanParam(value)
     is Int -> intParam(value)
-    is String -> stringParam(value)
     is BigDecimal -> decimalParam(value)
     is Instant -> instantParam(value)
     is LocalDate -> dateParam(value)
     is LocalTime -> timeParam(value)
-    else -> objectParam(value)
-}
+    is String -> QueryParameter(value, type) // string values use column type
+    else -> QueryParameter(value, type) // for null values and other types
+} as Expression<T>
 
-fun booleanParam(value: Boolean): Expression = QueryParameter(value, BooleanColumnType)
 
-fun intParam(value: Int): Expression = QueryParameter(value, IntColumnType)
+private fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType)
 
-fun stringParam(value: String): Expression = QueryParameter(value, StringColumnType)
+private fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntColumnType)
 
-fun decimalParam(value: BigDecimal): Expression =
+private fun decimalParam(value: BigDecimal): Expression<BigDecimal> =
     QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
 
-fun instantParam(value: Instant): Expression = QueryParameter(value, InstantColumnType)
+private fun instantParam(value: Instant): Expression<Instant> = QueryParameter(value, InstantColumnType)
 
-fun dateParam(value: LocalDate): Expression = QueryParameter(value, LocalDateColumnType)
+private fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, LocalDateColumnType)
 
-fun timeParam(value: LocalTime): Expression = QueryParameter(value, LocalTimeColumnType)
-
-fun objectParam(value: Any): Expression = QueryParameter(value, ObjectColumnType)
-
+private fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, LocalTimeColumnType)
 
 fun buildStatement(prepared: Boolean = false, body: SqlBuilder.() -> Unit): SqlBuilder {
     return SqlStatement(prepared).apply(body)
 }
 
-fun buildSql(prepared: Boolean = false, body: SqlBuilder.() -> Unit): String {
-    return buildStatement(prepared, body).asSql()
-}
+fun Expression<*>.toSql(prepared: Boolean = false) = buildStatement(prepared) {
+    +this@toSql
+}.asSql()
 
-fun Expression.toSql(prepared: Boolean = false) = buildSql(prepared) { +this@toSql }
-
-fun Expression.arguments(): List<Argument<*>> = SqlStatement.prepared { +this@arguments }.arguments
+fun Expression<*>.arguments(): List<Argument<*>> = SqlStatement.prepared { +this@arguments }.arguments
 

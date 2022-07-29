@@ -29,8 +29,8 @@ class ParametrizedStatementTest {
             "args", statement.arguments(),
             equalTo(
                 listOf(
-                    StringColumnType to "green",
-                    StringColumnType to "sweet",
+                    AutoDetectColumnType to "green",
+                    AutoDetectColumnType to "sweet",
                     IntColumnType to 10
                 )
             )

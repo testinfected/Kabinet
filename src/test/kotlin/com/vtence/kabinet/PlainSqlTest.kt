@@ -40,12 +40,12 @@ class PlainSqlTest {
             bulldog
                 .set("number", "12345678")
                 .set("name", "English Bulldog")
-                .set("description", "A muscular, heavy dog")
+                .set("description", null)
                 .insert(recorder) { it.id }
         }
 
         recorder.assertSql(
-            "INSERT INTO products(number, name, description) VALUES('12345678', 'English Bulldog', 'A muscular, heavy dog')")
+            "INSERT INTO products(number, name, description) VALUES('12345678', 'English Bulldog', NULL)")
         assertThat("id", id, present())
 
         val products = sql(
@@ -66,7 +66,7 @@ class PlainSqlTest {
                 hasId(id) and
                         hasNumber(12345678) and
                         hasName("English Bulldog") and
-                        hasDescription("A muscular, heavy dog")
+                        hasDescription(null)
             )
         )
     }

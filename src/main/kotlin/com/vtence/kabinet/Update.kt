@@ -4,7 +4,7 @@ package com.vtence.kabinet
 class Update(set: ColumnSet, data: DataChange) : Command {
     private val statement = UpdateStatement(set, data.values)
 
-    fun where(condition: Expression): Command = apply {
+    fun where(condition: Expression<Boolean>): Command = apply {
         statement.where(condition)
     }
 
@@ -30,5 +30,5 @@ fun <T : Table> T.update(record: Dehydrator<T>): Update {
 fun <T : Table> T.updateWhere(condition: String, vararg params: Any?, record: Dehydrator<T>): Command =
     updateWhere(condition.asExpression(*params), record)
 
-fun <T : Table> T.updateWhere(expression: Expression, record: Dehydrator<T>): Command =
+fun <T : Table> T.updateWhere(expression: Expression<Boolean>, record: Dehydrator<T>): Command =
     update(record).where(expression)

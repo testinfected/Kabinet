@@ -9,7 +9,7 @@ class PreparedExpressionTest {
 
     @Test
     fun `preserves parameterless expression`() {
-        val expression = PreparedExpression("name = 'Bulldog'", listOf())
+        val expression = PreparedExpression<Boolean>("name = 'Bulldog'", listOf())
 
         assertThat("sql", expression.toSql(), equalTo("name = 'Bulldog'"))
         assertThat("args", expression.arguments(), isEmpty)
@@ -17,7 +17,7 @@ class PreparedExpressionTest {
 
     @Test
     fun `replaces question marks with parameters, in order`() {
-        val expression = PreparedExpression("number = ? AND name = ?", listOf(12345678, "Mastiff"))
+        val expression = PreparedExpression<Boolean>("number = ? AND name = ?", listOf(12345678, "Mastiff"))
 
         assertThat("raw sql", expression.toSql(), equalTo(
             "number = 12345678 AND name = 'Mastiff'"
@@ -26,13 +26,21 @@ class PreparedExpressionTest {
             "number = ? AND name = ?"
         ))
         assertThat("args", expression.arguments(), equalTo(
-            listOf(IntColumnType to 12345678, StringColumnType to "Mastiff")
+            listOf(IntColumnType to 12345678, AutoDetectColumnType to "Mastiff")
         ))
     }
 
     @Test
+    fun `handles null parameter values`() {
+        val expression = PreparedExpression<Boolean>("description IS ?", listOf(null))
+
+        assertThat("sql", expression.toSql(), equalTo("description IS NULL"))
+        assertThat("args", expression.arguments(), equalTo(listOf(AutoDetectColumnType to null)))
+    }
+
+    @Test
     fun `ignores doubled question marks`() {
-        val expression = PreparedExpression("number = ? AND thing ?? ...", listOf(12345678))
+        val expression = PreparedExpression<Boolean>("number = ? AND thing ?? ...", listOf(12345678))
 
         assertThat("raw sql", expression.toSql(), equalTo(
             "number = 12345678 AND thing ?? ..."
@@ -47,7 +55,7 @@ class PreparedExpressionTest {
 
     @Test
     fun `ignores quoted question marks`() {
-        val expression = PreparedExpression("foo = \"?\" AND bar = '?' and baz = '\"?'", listOf())
+        val expression = PreparedExpression<Boolean>("foo = \"?\" AND bar = '?' and baz = '\"?'", listOf())
 
         assertThat("raw sql", expression.toSql(), equalTo(
             "foo = \"?\" AND bar = '?' and baz = '\"?'"

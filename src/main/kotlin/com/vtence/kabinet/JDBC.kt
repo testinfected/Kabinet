@@ -3,9 +3,9 @@ package com.vtence.kabinet
 import java.sql.PreparedStatement
 
 
-fun PreparedStatement.setParameters(parameters: List<Argument<*>>) {
-    for (i in parameters.indices) {
-        this[i + 1] = parameters[i]
+fun PreparedStatement.set(arguments: List<Argument<*>>) {
+    for (i in arguments.indices) {
+        this[i + 1] = arguments[i]
     }
 }
 

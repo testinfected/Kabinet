@@ -19,7 +19,7 @@ abstract class Query {
 
     abstract fun count(executor: StatementExecutor): Long
 
-    abstract fun orderBy(expression: Expression): Query
+    abstract fun orderBy(expression: Expression<Nothing>): Query
 }
 
 
@@ -49,9 +49,9 @@ enum class SortOrder {
     ASC, DESC
 }
 
-fun Query.orderBy(column: Expression, order: SortOrder = SortOrder.ASC): Query = orderBy(column to order)
+fun Query.orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC): Query = orderBy(column to order)
 
-fun Query.orderBy(vararg order: Pair<Expression, SortOrder>): Query = apply {
+fun Query.orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query = apply {
     order.forEach { (clause, sort) ->
         orderBy {
             it.append(clause)

@@ -38,7 +38,7 @@ class ExpressionParametersTest {
             Products
                 .selectWhere {
                     +"name LIKE "
-                    +"Great%".asArgument()
+                    +"Great%".toArgument(StringColumnType)
                 }
                 .list(recorder) { it.product }
 
@@ -187,4 +187,3 @@ class ExpressionParametersTest {
         )
     }
 }
-

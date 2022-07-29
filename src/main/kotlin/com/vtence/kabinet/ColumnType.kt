@@ -40,14 +40,21 @@ abstract class ColumnType<T> {
 }
 
 
-object ObjectColumnType : ColumnType<Any>() {
-    override val sqlType = JDBCType.JAVA_OBJECT
+object AutoDetectColumnType : ColumnType<Any>() {
+    override val sqlType = JDBCType.OTHER
 
     @Suppress("UNCHECKED_CAST")
     override fun nullable() = this as ColumnType<Any?>
 
     override fun get(rs: ResultSet, index: Int): Any? {
         return rs.getObject(index)
+    }
+
+    override fun set(statement: PreparedStatement, index: Int, value: Any?) {
+        if (value != null)
+            statement.setObject(index, value)
+        else
+            statement.setObject(index, null)
     }
 
     override fun toNonNullSql(value: Any): String = when (value) {

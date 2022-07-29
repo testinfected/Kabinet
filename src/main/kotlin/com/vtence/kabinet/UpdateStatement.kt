@@ -2,10 +2,10 @@ package com.vtence.kabinet
 
 import java.sql.PreparedStatement
 
-class UpdateStatement(private val set: ColumnSet, private val values: Iterable<Any?>) : Expression, Preparable {
-    private var whereClause: Expression? = null
+class UpdateStatement(private val set: ColumnSet, private val values: Iterable<Any?>) : Expression<Nothing>, Preparable {
+    private var whereClause: Expression<Boolean>? = null
 
-    fun where(clause: Expression): UpdateStatement = apply {
+    fun where(clause: Expression<Boolean>): UpdateStatement = apply {
         whereClause = clause
     }
 

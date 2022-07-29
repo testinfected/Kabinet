@@ -4,16 +4,16 @@ import java.sql.PreparedStatement
 
 class SelectStatement(
     private val from: FieldSet,
-) : Expression, Preparable {
+) : Expression<Nothing>, Preparable {
 
-    private var whereClause: Expression? = null
+    private var whereClause: Expression<Boolean>? = null
     private var limit: Int? = null
     private var offset: Int = 0
     private var count: Boolean = false
     private var distinct: Boolean = false
-    private val orderByClauses: MutableList<Expression> = mutableListOf()
+    private val orderByClauses: MutableList<Expression<*>> = mutableListOf()
 
-    fun where(clause: Expression): SelectStatement = apply {
+    fun where(clause: Expression<Boolean>): SelectStatement = apply {
         whereClause = clause
     }
 
@@ -30,7 +30,7 @@ class SelectStatement(
         distinct = true
     }
 
-    fun orderBy(expression: Expression) = apply {
+    fun orderBy(expression: Expression<Nothing>) = apply {
         orderByClauses += expression
     }
 
@@ -40,7 +40,7 @@ class SelectStatement(
             append("COUNT(DISTINCT (")
             from.fields.join { +it }
             append("))")
-        } else if (count && !distinct) {
+        } else if (count) {
             append("COUNT(*)")
         } else if (distinct) {
             append("DISTINCT ")
