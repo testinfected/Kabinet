@@ -60,7 +60,8 @@ object AutoDetectColumnType : ColumnType<Any>() {
     override fun toNonNullSql(value: Any): String = when (value) {
         is String -> StringColumnType.toNonNullSql(value)
         is Boolean -> BooleanColumnType.toNonNullSql(value)
-        is Int, Long -> IntColumnType.toNonNullSql(value)
+        is Int -> IntColumnType.toNonNullSql(value)
+        is Long -> LongColumnType.toNonNullSql(value)
         is BigDecimal -> DecimalColumnType(value.precision(), value.scale()).toNonNullSql(value)
         is LocalDate -> LocalDateColumnType.toNonNullSql(value)
         is Instant -> InstantColumnType.toNonNullSql(value)
@@ -112,6 +113,19 @@ object IntColumnType : ColumnType<Int>() {
 
     override fun get(rs: ResultSet, index: Int): Int? {
         val value = rs.getInt(index)
+        return if (rs.wasNull()) null else value
+    }
+}
+
+
+object LongColumnType : ColumnType<Long>() {
+    override val sqlType: SQLType = JDBCType.BIGINT
+
+    @Suppress("UNCHECKED_CAST")
+    override fun nullable() = this as ColumnType<Long?>
+
+    override fun get(rs: ResultSet, index: Int): Long? {
+        val value = rs.getLong(index)
         return if (rs.wasNull()) null else value
     }
 }

@@ -96,6 +96,7 @@ class SqlStatement(prepared: Boolean) : SqlBuilder(prepared) {
 fun <T> toQueryParameter(value: T, type: ColumnType<T>): Expression<T> = when (value) {
     is Boolean -> booleanParam(value)
     is Int -> intParam(value)
+    is Long -> longParam(value)
     is BigDecimal -> decimalParam(value)
     is Instant -> instantParam(value)
     is LocalDate -> dateParam(value)
@@ -108,6 +109,8 @@ fun <T> toQueryParameter(value: T, type: ColumnType<T>): Expression<T> = when (v
 private fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType)
 
 private fun intParam(value: Int): Expression<Int> = QueryParameter(value, IntColumnType)
+
+private fun longParam(value: Long): Expression<Long> = QueryParameter(value, LongColumnType)
 
 private fun decimalParam(value: BigDecimal): Expression<BigDecimal> =
     QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))

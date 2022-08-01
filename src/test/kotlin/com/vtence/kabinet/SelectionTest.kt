@@ -286,9 +286,9 @@ class SelectionTest {
 
     @Test
     fun `querying data from multiple tables using a left join`() {
-        persisted(Order(number = "00000001"))
-        persisted(Order(number = "10000001"))
-        val paid = Order(number = "10000002").also {
+        persisted(Order(number = 10000001))
+        persisted(Order(number = 20000001))
+        val paid = Order(number = 20000002).also {
             it.id = persisted(it)
         }
 
@@ -298,13 +298,13 @@ class SelectionTest {
             Orders
                 .leftJoin(Payments, Orders.id, Payments.orderId)
                 .slice(Orders)
-                .selectWhere("orders.number LIKE ?", "1000%")
+                .selectWhere("orders.number > ?", 20000000L)
                 .list(recorder) { it.order }
 
         assertThat(
             "selected", selection, allOf(
-                anyElement(hasNumber("10000001")),
-                anyElement(hasNumber("10000002"))
+                anyElement(hasNumber(20000001)),
+                anyElement(hasNumber(20000002))
             )
         )
         assertThat("selection", selection, hasSize(equalTo(2)))
@@ -312,7 +312,7 @@ class SelectionTest {
         recorder.assertSql(
             "SELECT orders.id, orders.number, orders.placed_at " +
                     "FROM orders LEFT JOIN payments ON orders.id = payments.order_id " +
-                    "WHERE orders.number LIKE '1000%'"
+                    "WHERE orders.number > 20000000"
         )
     }
 
@@ -355,11 +355,11 @@ class SelectionTest {
 
     @Test
     fun `counting the number of records`() {
-        persisted(Order(number = "00000001"))
-        persisted(Order(number = "10000002"))
-        persisted(Order(number = "10000003"))
-        persisted(Order(number = "10000004"))
-        persisted(Order(number = "00000005"))
+        persisted(Order(number = 20000001))
+        persisted(Order(number = 10000002))
+        persisted(Order(number = 10000003))
+        persisted(Order(number = 10000004))
+        persisted(Order(number = 20000005))
 
         val count =
             Orders
@@ -430,7 +430,7 @@ class SelectionTest {
 
         listOf(one, two, three).forEach { it.id = persisted(it)}
 
-        val order = Order(number = "10000001") + one + two + three
+        val order = Order(number = 10000001) + one + two + three
         persisted(order).let { order.id = it }
 
         val numbers = LineItems
@@ -461,7 +461,7 @@ class SelectionTest {
 
         listOf(one, two, three).forEach { it.id = persisted(it)}
 
-        val order = Order(number = "10000001") + one + two + three
+        val order = Order(number = 10000001) + one + two + three
         persisted(order).let { order.id = it }
 
         val selection = LineItems

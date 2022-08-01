@@ -54,7 +54,7 @@ class ExpressionParametersTest {
     }
 
     @Test
-    fun `using numbers in expressions`() {
+    fun `using integers in expressions`() {
         persist(Product(number = 666666, name = "Great Dane"))
         persist(Product(number = 888888, name = "Boxer"))
 
@@ -71,6 +71,25 @@ class ExpressionParametersTest {
             "SELECT products.id, products.number, products.name, products.description " +
                     "FROM products " +
                     "WHERE number > 777777"
+        )
+    }
+
+    @Test
+    fun `using longs in expressions`() {
+        persist(Order(number = 100000000L))
+        persist(Order(number = 200000000L))
+
+        val selection =
+            Orders
+                .selectWhere("number > ?", 100000000L)
+                .list(recorder) { it.order }
+
+        assertThat(
+            "selection", selection, anyElement(OrderThat.hasNumber(200000000L))
+        )
+
+        recorder.assertSql(
+            "SELECT orders.id, orders.number, orders.placed_at FROM orders WHERE number > 100000000"
         )
     }
 
@@ -124,8 +143,8 @@ class ExpressionParametersTest {
     fun `using instants in expressions`() {
         fun midnightOn(date: LocalDate)  = ZonedDateTime.of(date, LocalTime.MIDNIGHT, ZoneId.systemDefault()).toInstant()
 
-        persist(Order(number = "10000000", placedAt = midnightOn(LocalDate.parse("2021-08-05"))))
-        persist(Order(number = "10000001", placedAt = midnightOn(LocalDate.parse("2021-09-20"))))
+        persist(Order(number = 10000000, placedAt = midnightOn(LocalDate.parse("2021-08-05"))))
+        persist(Order(number = 10000001, placedAt = midnightOn(LocalDate.parse("2021-09-20"))))
 
         val selection =
             Orders
@@ -133,7 +152,7 @@ class ExpressionParametersTest {
                 .list(recorder) { it.order }
 
         assertThat(
-            "selection", selection, anyElement(OrderThat.hasNumber("10000001"))
+            "selection", selection, anyElement(OrderThat.wasPlacedAt(midnightOn(LocalDate.parse("2021-09-20"))))
         )
 
         recorder.assertSql(
@@ -143,7 +162,7 @@ class ExpressionParametersTest {
 
     @Test
     fun `using local dates in expressions`() {
-        val paid = Order(number = "10000000").also {
+        val paid = Order(number = 10000000).also {
             it.id = persist(it)
         }
 
@@ -166,7 +185,7 @@ class ExpressionParametersTest {
 
     @Test
     fun `using local times in expressions`() {
-        val paid = Order(number = "10000000").also {
+        val paid = Order(number = 10000000).also {
             it.id = persist(it)
         }
 

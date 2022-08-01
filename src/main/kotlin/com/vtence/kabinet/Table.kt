@@ -50,6 +50,8 @@ open class Table(name: String) : ColumnSet {
 
     fun int(name: String): Column<Int> = addColumn(name, IntColumnType)
 
+    fun long(name: String): Column<Long> = addColumn(name, LongColumnType)
+
     fun string(name: String): Column<String> = addColumn(name, StringColumnType)
 
     fun boolean(name: String): Column<Boolean> = addColumn(name, BooleanColumnType)
