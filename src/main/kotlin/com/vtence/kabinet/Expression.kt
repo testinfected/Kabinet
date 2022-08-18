@@ -93,7 +93,7 @@ class SqlStatement(prepared: Boolean) : SqlBuilder(prepared) {
 
 
 @Suppress("UNCHECKED_CAST")
-fun <T> toQueryParameter(value: T, type: ColumnType<T>): Expression<T> = when (value) {
+internal fun <T> toQueryParameter(value: T, type: ColumnType<T>): Expression<T> = when (value) {
     is Boolean -> booleanParam(value)
     is Int -> intParam(value)
     is Long -> longParam(value)

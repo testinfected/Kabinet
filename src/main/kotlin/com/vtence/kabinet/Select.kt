@@ -17,7 +17,7 @@ class Select(private val from: FieldSet) : Query() {
         statement.distinctOnly()
     }
 
-    override fun orderBy(expression: Expression<Nothing>): Query = apply {
+    override fun orderBy(expression: Expression<*>): Query = apply {
         statement.orderBy(expression)
     }
 

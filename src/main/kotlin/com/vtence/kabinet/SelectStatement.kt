@@ -30,7 +30,7 @@ class SelectStatement(
         distinct = true
     }
 
-    fun orderBy(expression: Expression<Nothing>) = apply {
+    fun orderBy(expression: Expression<*>) = apply {
         orderByClauses += expression
     }
 

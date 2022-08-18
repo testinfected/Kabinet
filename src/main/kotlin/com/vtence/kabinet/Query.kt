@@ -19,7 +19,7 @@ abstract class Query {
 
     abstract fun count(executor: StatementExecutor): Long
 
-    abstract fun orderBy(expression: Expression<Nothing>): Query
+    abstract fun orderBy(expression: Expression<*>): Query
 }
 
 
@@ -62,7 +62,7 @@ fun Query.orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query = apply {
 }
 
 fun Query.orderBy(clause: String, vararg parameters: Any?): Query =
-    orderBy(clause.asExpression(*parameters))
+    orderBy(clause.asExpression<Nothing>(*parameters))
 
 
 
