@@ -9,7 +9,7 @@ class SelectStatement(
     private var whereClause: Expression<Boolean>? = null
     private var limit: Int? = null
     private var offset: Int = 0
-    private var count: Boolean = false
+    private var counting: Boolean = false
     private var distinct: Boolean = false
     private val orderByClauses: MutableList<Expression<*>> = mutableListOf()
 
@@ -23,7 +23,7 @@ class SelectStatement(
     }
 
     fun countOnly(): SelectStatement = apply {
-        count = true
+        counting = true
     }
 
     fun distinctOnly(): SelectStatement = apply {
@@ -36,11 +36,11 @@ class SelectStatement(
 
     override fun build(statement: SqlBuilder) = statement {
         append("SELECT ")
-        if (count && distinct) {
+        if (counting && distinct) {
             append("COUNT(DISTINCT (")
             from.fields.join { +it }
             append("))")
-        } else if (count) {
+        } else if (counting) {
             append("COUNT(*)")
         } else if (distinct) {
             append("DISTINCT ")
@@ -52,10 +52,13 @@ class SelectStatement(
         whereClause?.let {
             append(" WHERE ", it)
         }
-        if (orderByClauses.isNotEmpty()) {
-            append(" ORDER BY ")
-            orderByClauses.join {
-                +it
+
+        if(!counting) {
+            if (orderByClauses.isNotEmpty()) {
+                append(" ORDER BY ")
+                orderByClauses.join {
+                    +it
+                }
             }
         }
 

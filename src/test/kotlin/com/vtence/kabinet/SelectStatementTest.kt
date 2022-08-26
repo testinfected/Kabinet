@@ -137,4 +137,12 @@ class SelectStatementTest {
         ))
     }
 
+    @Test
+    fun `drops order by clause when counting`() {
+        val select = SelectStatement(Products).orderBy(Products.number).countOnly()
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT COUNT(*) FROM products"
+        ))
+    }
 }
