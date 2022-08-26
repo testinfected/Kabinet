@@ -29,7 +29,7 @@ object Payments : Table("payments") {
     val time = time("time")
 }
 
-private fun dehydrate(payment: Payment): Payments.(Dataset) -> Unit = {
+private fun dehydrate(payment: Payment): Payments.(DataSet) -> Unit = {
     it[orderId] = payment.orderId
     it[amount] = payment.amount
     it[date] = payment.date

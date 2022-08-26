@@ -6,8 +6,14 @@ interface DataChange {
 }
 
 
-class Dataset(private val base: List<Column<*>>): DataChange {
+class DataSet(private val base: List<Column<*>>): DataChange {
     private val data: MutableMap<Column<*>, Any?> = LinkedHashMap()
+
+    val columns: List<Column<*>>
+        get() = base.ifEmpty { this.data.keys.toList() }
+
+    override val values: List<Any?>
+        get() = columns.map { this.data[it] }
 
     operator fun <V> set(column: Column<V>, value: V) {
         when {
@@ -16,17 +22,11 @@ class Dataset(private val base: List<Column<*>>): DataChange {
         }
     }
 
-    override val values: List<Any?>
-        get() = columns.map { this.data[it] }
-
-    val columns: List<Column<*>>
-        get() = base.ifEmpty { this.data.keys.toList() }
-
     companion object {
-        fun closed(columns: List<Column<*>>) = Dataset(columns)
+        fun closed(columns: List<Column<*>>) = DataSet(columns)
 
-        fun opened() = Dataset(listOf())
+        fun opened() = DataSet(listOf())
     }
 }
 
-typealias Dehydrator<T> = T.(Dataset) -> Unit
+typealias Dehydrator<T> = T.(DataSet) -> Unit

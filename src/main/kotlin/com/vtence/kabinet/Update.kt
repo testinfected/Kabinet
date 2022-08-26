@@ -23,7 +23,7 @@ class Update(set: ColumnSet, data: DataChange) : Command {
 
 
 fun <T : Table> T.update(record: Dehydrator<T>): Update {
-    val change = Dataset.opened().apply { record(this) }
+    val change = DataSet.opened().apply { record(this) }
     return Update.set(slice(change.columns), values = change)
 }
 

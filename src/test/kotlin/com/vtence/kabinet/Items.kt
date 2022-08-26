@@ -21,7 +21,7 @@ object Items : Table("items") {
 }
 
 
-private fun Items.dehydrate(st: Dataset, item: Item) {
+private fun Items.dehydrate(st: DataSet, item: Item) {
     st[productId] = item.productId
     st[number] = item.number
     st[price] = item.price

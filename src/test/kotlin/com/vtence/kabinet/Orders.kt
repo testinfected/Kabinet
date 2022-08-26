@@ -46,7 +46,7 @@ object Orders : Table("orders") {
     val placedAt = timestamp("placed_at")
 }
 
-private fun Orders.dehydrate(st: Dataset, order: Order) {
+private fun Orders.dehydrate(st: DataSet, order: Order) {
     st[number] = order.number
     st[placedAt] = order.placedAt
 }
@@ -59,7 +59,7 @@ private fun Orders.hydrate(row: ResultRow): Order {
     )
 }
 
-val Order.record: Orders.(Dataset) -> Unit
+val Order.record: Orders.(DataSet) -> Unit
     get() = { dehydrate(it, this@record) }
 
 val ResultRow.order: Order
@@ -83,7 +83,7 @@ object LineItems : Table("line_items") {
 }
 
 
-private fun LineItems.dehydrate(st: Dataset, line: LineItem) {
+private fun LineItems.dehydrate(st: DataSet, line: LineItem) {
     st[itemNumber] = line.itemNumber
     st[itemPrice] = line.itemUnitPrice
     st[quantity] = line.quantity

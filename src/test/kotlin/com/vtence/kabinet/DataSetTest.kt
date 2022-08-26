@@ -11,11 +11,11 @@ import com.vtence.kabinet.Products.number
 import org.junit.jupiter.api.Nested
 import kotlin.test.Test
 
-class DatasetTest {
+class DataSetTest {
 
     @Nested
     inner class Closed {
-        val closed = Dataset.closed(Products.columns)
+        val closed = DataSet.closed(Products.columns)
 
         @Test
         fun `reports base columns in order`() {
@@ -55,7 +55,7 @@ class DatasetTest {
 
     @Nested
     inner class Opened {
-        val opened = Dataset.opened()
+        val opened = DataSet.opened()
 
         @Test
         fun `reports parameters in set order`() {

@@ -22,7 +22,7 @@ object Products : Table("products") {
 }
 
 
-private fun Products.dehydrate(st: Dataset, product: Product) {
+private fun Products.dehydrate(st: DataSet, product: Product) {
     st[number] = product.number
     st[description] = product.description
     st[name] = product.name
