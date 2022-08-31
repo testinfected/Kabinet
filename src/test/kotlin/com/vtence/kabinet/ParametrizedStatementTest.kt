@@ -50,4 +50,17 @@ class ParametrizedStatementTest {
             equalTo("SELECT * FROM vegetables WHERE color_gradient = 'linear' AND color = 'green'")
         )
     }
+
+    @Test
+    fun `only replaces known parameter names`() {
+        val statement = ParameterizedStatement(
+            "SELECT * FROM vegetables WHERE color_gradient = :color_gradient AND color = 'green' ::COLOR"
+        )
+        statement["color_gradient"] = "linear"
+
+        assertThat(
+            "sql", statement.toSql(),
+            equalTo("SELECT * FROM vegetables WHERE color_gradient = 'linear' AND color = 'green' ::COLOR")
+        )
+    }
 }
