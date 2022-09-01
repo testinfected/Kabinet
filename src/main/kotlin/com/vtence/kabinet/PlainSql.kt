@@ -31,6 +31,12 @@ class PlainSql(sql: String) {
             result.toList()
         })
     }
+
+    fun execute(executor: StatementExecutor): Int {
+        return executor.execute(statement.retrieveGeneratedKeys().prepare {
+            it.executeUpdate()
+        })
+    }
 }
 
 fun PlainSql.insert(connection: Connection): Unit = insert(StatementExecutor(connection))
@@ -42,6 +48,12 @@ fun <T> PlainSql.insert(connection: Connection, handleKeys: (ResultSet) -> T): T
 
 fun <T> PlainSql.list(connection: Connection, hydrate: (ResultSet) -> T): List<T> =
     list(StatementExecutor(connection)) { hydrate(it) }
+
+fun <T> PlainSql.firstOrNull(connection: Connection, hydrate: (ResultSet) -> T): T? =
+    firstOrNull(StatementExecutor(connection), hydrate)
+
+fun <T> PlainSql.firstOrNull(executor: StatementExecutor, hydrate: (ResultSet) -> T): T? =
+    list(executor, hydrate).firstOrNull()
 
 
 fun sql(statement: String): PlainSql = PlainSql(statement)
