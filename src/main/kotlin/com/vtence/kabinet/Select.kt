@@ -4,7 +4,7 @@ import java.sql.Connection
 import java.sql.ResultSet
 
 
-class Select(private val from: FieldSet) : Query() {
+class Select(private val from: FieldSet) : Query<Select>() {
     private val statement = SelectStatement(from)
 
     fun where(condition: String, vararg args: Any?): Select = where(condition.asExpression(*args))
@@ -17,7 +17,7 @@ class Select(private val from: FieldSet) : Query() {
         statement.distinctOnly()
     }
 
-    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query = apply {
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Select = apply {
         statement.orderBy(order.map { (expression, sort) -> OrderedBy(expression, sort) })
     }
 
@@ -29,7 +29,7 @@ class Select(private val from: FieldSet) : Query() {
         statement.having(condition)
     }
 
-    override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
+    override fun limit(count: Int, offset: Int): Select = apply { statement.limitTo(count, start = offset) }
 
     override fun <T> list(executor: StatementExecutor, hydrate: Hydrator<T>): List<T> {
         return execute(executor) { rs -> read(rs, hydrate) }
