@@ -18,7 +18,7 @@ class Select(private val from: FieldSet) : Query() {
     }
 
     override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query = apply {
-        statement.orderBy(order.map { (clause, sort) -> OrderByClause(clause, sort) })
+        statement.orderBy(order.map { (expression, sort) -> OrderedBy(expression, sort) })
     }
 
     override fun groupBy(vararg columns: Expression<*>): Select = apply {
@@ -81,10 +81,9 @@ fun <R> FieldSet.selectAll(connection: Connection, hydrate: Hydrator<R>): List<R
     selectAll(StatementExecutor(connection), hydrate)
 
 
-
-class OrderByClause(private val clause: Expression<*>, private val sort: SortOrder) : Expression<Nothing> {
+private class OrderedBy(private val expression: Expression<*>, private val sort: SortOrder) : Expression<Nothing> {
     override fun build(statement: SqlBuilder) = statement {
-        append(clause)
+        append(expression)
         append(" ")
         append(sort.name)
     }
