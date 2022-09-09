@@ -107,12 +107,31 @@ class SelectStatementTest {
     }
 
     @Test
+    fun `supports group by clauses`() {
+        val select = SelectStatement(Products.slice(Products.name, Products.description, intLiteral("count(products.id)")))
+            .groupBy("name".asExpression<Nothing>(), "description".asExpression<Nothing>())
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT products.name, products.description, count(products.id) FROM products GROUP BY name, description"
+        ))
+    }
+
+    @Test
+    fun `drops group by clause when counting`() {
+        val select = SelectStatement(Products).groupBy(Products.number).countOnly()
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT COUNT(*) FROM products"
+        ))
+    }
+
+    @Test
     fun `supports order by clauses`() {
-        val select = SelectStatement(Products)
+        val select = SelectStatement(Products.slice(Products.id))
             .orderBy("name".asExpression<Nothing>(), "number DESC".asExpression<Nothing>())
 
         assertThat("sql", select.toSql(), equalTo(
-            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY name, number DESC"
+            "SELECT products.id FROM products ORDER BY name, number DESC"
         ))
     }
 
@@ -122,6 +141,18 @@ class SelectStatementTest {
 
         assertThat("sql", select.toSql(), equalTo(
             "SELECT COUNT(*) FROM products"
+        ))
+    }
+
+    @Test
+    fun `outputs clauses in proper order`() {
+        val select = SelectStatement(Products.slice(Products.name, Products.number, intLiteral("count(products.id)")))
+            .orderBy(Products.number)
+            .groupBy(Products.name, Products.number)
+            .where("name <> ''".asExpression())
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT products.name, products.number, count(products.id) FROM products WHERE name <> '' GROUP BY products.name, products.number ORDER BY products.number"
         ))
     }
 }

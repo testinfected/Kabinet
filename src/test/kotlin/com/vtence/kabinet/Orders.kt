@@ -14,6 +14,8 @@ data class Order(
 ) {
     operator fun plus(item: Item): Order = copy(lines = lines + item.lineFor(this))
 
+    operator fun plus(items: Iterable<Item>): Order = items.fold(this) { order, item -> order + item }
+
     val total: BigDecimal get() = lines.fold(BigDecimal.ZERO) { total, item -> total + item.total }
 }
 

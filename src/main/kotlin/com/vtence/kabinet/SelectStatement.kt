@@ -6,15 +6,16 @@ class SelectStatement(
     private val from: FieldSet,
 ) : Expression<Nothing>, Preparable {
 
-    private var whereClause: Expression<Boolean>? = null
+    private var where: Expression<Boolean>? = null
     private var limit: Int? = null
     private var offset: Int = 0
     private var counting: Boolean = false
     private var distinct: Boolean = false
-    private val orderByClauses: MutableList<Expression<*>> = mutableListOf()
+    private val groupedBy: MutableList<Expression<*>> = mutableListOf()
+    private val orderedBy: MutableList<Expression<*>> = mutableListOf()
 
     fun where(clause: Expression<Boolean>): SelectStatement = apply {
-        whereClause = clause
+        where = clause
     }
 
     fun limitTo(count: Int, start: Int): SelectStatement = apply {
@@ -30,10 +31,16 @@ class SelectStatement(
         distinct = true
     }
 
+    fun groupBy(vararg expressions: Expression<*>): SelectStatement = groupBy(expressions.toList())
+
+    fun groupBy(expressions: Iterable<Expression<*>>): SelectStatement = apply {
+        groupedBy += expressions
+    }
+
     fun orderBy(vararg expressions: Expression<*>) = orderBy(expressions.toList())
 
     fun orderBy(expressions: Iterable<Expression<*>>) = apply {
-        orderByClauses += expressions
+        orderedBy += expressions
     }
 
     override fun build(statement: SqlBuilder) = statement {
@@ -51,14 +58,21 @@ class SelectStatement(
             from.fields.join { +it }
         }
         append(" FROM ", from.source)
-        whereClause?.let {
+        where?.let {
             append(" WHERE ", it)
         }
 
         if(!counting) {
-            if (orderByClauses.isNotEmpty()) {
+            if (groupedBy.isNotEmpty()) {
+                append(" GROUP BY ")
+                groupedBy.join {
+                    +it
+                }
+            }
+            
+            if (orderedBy.isNotEmpty()) {
                 append(" ORDER BY ")
-                orderByClauses.join {
+                orderedBy.join {
                     +it
                 }
             }

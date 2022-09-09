@@ -111,7 +111,7 @@ fun ColumnSet.slice(fields: List<Field<*>>): FieldSet = Slice(this, fields)
 fun ColumnSet.select(column: Field<*>, vararg more: Field<*>): Select = Select.from(slice(column, *more))
 
 
-operator fun Field<*>.plus(fields: Iterable<Field<*>>): List<Field<*>> = listOf(this) + fields.toList()
+operator fun Field<*>.plus(others: Iterable<Field<*>>): List<Field<*>> = listOf(this) + others.toList()
 
 operator fun Field<*>.plus(other: FieldSet): List<Field<*>> = this + other.fields
 

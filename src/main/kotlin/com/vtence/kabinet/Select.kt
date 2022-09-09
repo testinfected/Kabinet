@@ -21,6 +21,10 @@ class Select(private val from: FieldSet) : Query() {
         statement.orderBy(order.map { (clause, sort) -> OrderByClause(clause, sort) })
     }
 
+    override fun groupBy(vararg columns: Expression<*>): Query = apply {
+        statement.groupBy(*columns)
+    }
+
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
 
     override fun <T> list(executor: StatementExecutor, hydrate: Hydrator<T>): List<T> {

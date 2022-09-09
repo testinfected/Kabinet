@@ -34,6 +34,7 @@ class SelectionTest {
     }
 
     val frenchie = Product(number = 77777777, name = "French Bulldog", description = "A cute, family dog")
+    val pug = Product(number = 88888888, name = "Pug", description = "A funny little dog")
 
     @Test
     fun `retrieving a record from a table`() {
@@ -205,7 +206,7 @@ class SelectionTest {
 
         val selection =
             Products
-                .join(Items, Products.id, Items.productId)
+                .join(Items, id, productId)
                 .selectWhere("items.price < ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
@@ -228,7 +229,7 @@ class SelectionTest {
 
         val selection =
             Products
-                .join(Items, Products.id, Items.productId, "$name <> ?", boxer.name)
+                .join(Items, id, productId, "$name <> ?", boxer.name)
                 .selectWhere("items.price < ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
@@ -421,15 +422,19 @@ class SelectionTest {
 
     @Test
     fun `ordering extracted records, using a column expression`() {
-        val id = persisted(frenchie)
-        val one = Item(productId = id, number = "0001", price = BigDecimal(3199))
-        val two = Item(productId = id, number = "0002", price = BigDecimal(3299))
-        val three = Item(productId = id, number = "0003", price = BigDecimal(3399))
+        val frenchies = persisted(frenchie).let { id ->
+            listOf(
+                Item(productId = id, number = "0001", price = BigDecimal(3199)),
+                Item(productId = id, number = "0002", price = BigDecimal(3299)),
+                Item(productId = id, number = "0003", price = BigDecimal(3399))
+            ).map {
+                it.apply { this.id = persisted(it) }
+            }
+        }
 
-        listOf(one, two, three).forEach { it.id = persisted(it)}
-
-        val order = Order(number = 10000001) + one + two + three
-        persisted(order).let { order.id = it }
+        val order = (Order(number = 10000001) + frenchies).also {
+            it.id = persisted(it)
+        }
 
         val selection = LineItems
             .slice(LineItems.itemNumber)
@@ -451,15 +456,19 @@ class SelectionTest {
 
     @Test
     fun `ordering extracted records, using a literal expression`() {
-        val id = persisted(frenchie)
-        val one = Item(productId = id, number = "0001", price = BigDecimal(3199))
-        val two = Item(productId = id, number = "0002", price = BigDecimal(3299))
-        val three = Item(productId = id, number = "0003", price = BigDecimal(3399))
+        val frenchies = persisted(frenchie).let { id ->
+            listOf(
+                Item(productId = id, number = "0001", price = BigDecimal(3199)),
+                Item(productId = id, number = "0002", price = BigDecimal(3299)),
+                Item(productId = id, number = "0003", price = BigDecimal(3399))
+            ).map {
+                it.apply { this.id = persisted(it) }
+            }
+        }
 
-        listOf(one, two, three).forEach { it.id = persisted(it)}
-
-        val order = Order(number = 10000001) + one + two + three
-        persisted(order).let { order.id = it }
+        val order = (Order(number = 10000001) + frenchies).also {
+            it.id = persisted(it)
+        }
 
         val numbers = LineItems
             .slice(LineItems.itemNumber)
@@ -476,6 +485,40 @@ class SelectionTest {
                     "FROM line_items " +
                     "WHERE order_id = ${order.id} " +
                     "ORDER BY substring(item_number from 4 for 1) DESC"
+        )
+    }
+
+    @Test
+    fun `grouping records`() {
+        persisted(frenchie).let { id ->
+            persisted(Item(productId = id, number = "0001", price = BigDecimal(3199)))
+            persisted(Item(productId = id, number = "0002", price = BigDecimal(3299)))
+            persisted(Item(productId = id, number = "0003", price = BigDecimal(3399)))
+        }
+
+        persisted(pug).let { id ->
+            persisted(Item(productId = id, number = "0004", price = BigDecimal(1199)))
+            persisted(Item(productId = id, number = "0005", price = BigDecimal(1299)))
+        }
+
+        val itemCount = intLiteral("count(items.id)")
+
+        val inventory = Products
+            .join(Items, productId, id)
+            .slice(name, itemCount)
+            .selectAll()
+            .groupBy(id)
+            .list(recorder) { it[name] to it[itemCount] }
+
+        assertThat(
+            "inventory", inventory,hasElement("French Bulldog" to 3) and hasElement("Pug" to 2)
+        )
+
+        recorder.assertSql(
+            "SELECT products.name, count(items.id) " +
+                    "FROM products " +
+                    "INNER JOIN items ON items.product_id = products.id " +
+                    "GROUP BY products.id"
         )
     }
 }
