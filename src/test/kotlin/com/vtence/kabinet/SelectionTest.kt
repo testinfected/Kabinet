@@ -521,4 +521,40 @@ class SelectionTest {
                     "GROUP BY products.id"
         )
     }
+
+    @Test
+    fun `using a search condition for an aggregate`() {
+        persisted(frenchie).let { id ->
+            persisted(Item(productId = id, number = "0001", price = BigDecimal(3199)))
+            persisted(Item(productId = id, number = "0002", price = BigDecimal(3299)))
+            persisted(Item(productId = id, number = "0003", price = BigDecimal(3399)))
+        }
+
+        persisted(pug).let { id ->
+            persisted(Item(productId = id, number = "0004", price = BigDecimal(1199)))
+            persisted(Item(productId = id, number = "0005", price = BigDecimal(1299)))
+        }
+
+        val itemCount = intLiteral("count(items.id)")
+
+        val inventory = Products
+            .join(Items, productId, id)
+            .slice(name, itemCount)
+            .selectAll()
+            .groupBy(id)
+            .having("count(items.id) > 2".asExpression())
+            .list(recorder) { it[name] to it[itemCount] }
+
+        assertThat(
+            "inventory", inventory,hasElement("French Bulldog" to 3) and !hasElement("Pug" to 2)
+        )
+
+        recorder.assertSql(
+            "SELECT products.name, count(items.id) " +
+                    "FROM products " +
+                    "INNER JOIN items ON items.product_id = products.id " +
+                    "GROUP BY products.id " +
+                    "HAVING count(items.id) > 2"
+        )
+    }
 }

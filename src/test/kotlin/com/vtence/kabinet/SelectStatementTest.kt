@@ -117,6 +117,17 @@ class SelectStatementTest {
     }
 
     @Test
+    fun `supports having clauses`() {
+        val select = SelectStatement(Products.slice(Products.name, intLiteral("count(products.id)")))
+            .groupBy("name".asExpression<Nothing>())
+            .having("count(products.id) > ?".asExpression(2))
+
+        assertThat("sql", select.toSql(), equalTo(
+            "SELECT products.name, count(products.id) FROM products GROUP BY name HAVING count(products.id) > 2"
+        ))
+    }
+
+    @Test
     fun `drops group by clause when counting`() {
         val select = SelectStatement(Products).groupBy(Products.number).countOnly()
 
@@ -146,13 +157,14 @@ class SelectStatementTest {
 
     @Test
     fun `outputs clauses in proper order`() {
-        val select = SelectStatement(Products.slice(Products.name, Products.number, intLiteral("count(products.id)")))
-            .orderBy(Products.number)
-            .groupBy(Products.name, Products.number)
+        val select = SelectStatement(Products.slice(Products.name, intLiteral("count(products.id)")))
+            .orderBy(Products.name)
+            .having("count(products.id) > 2".asExpression())
+            .groupBy(Products.name)
             .where("name <> ''".asExpression())
 
         assertThat("sql", select.toSql(), equalTo(
-            "SELECT products.name, products.number, count(products.id) FROM products WHERE name <> '' GROUP BY products.name, products.number ORDER BY products.number"
+            "SELECT products.name, count(products.id) FROM products WHERE name <> '' GROUP BY products.name HAVING count(products.id) > 2 ORDER BY products.name"
         ))
     }
 }

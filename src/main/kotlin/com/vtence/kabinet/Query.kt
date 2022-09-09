@@ -12,6 +12,8 @@ abstract class Query {
 
     abstract fun groupBy(vararg columns: Expression<*>): Query
 
+    abstract fun having(condition: Expression<Boolean>): Query
+
     abstract fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query
 
     abstract fun limit(count: Int, offset: Int = 0): Query

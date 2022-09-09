@@ -7,10 +7,10 @@ import java.sql.ResultSet
 class Select(private val from: FieldSet) : Query() {
     private val statement = SelectStatement(from)
 
-    fun where(clause: String, vararg args: Any?): Query = where(clause.asExpression(*args))
+    fun where(condition: String, vararg args: Any?): Query = where(condition.asExpression(*args))
 
-    fun where(clause: Expression<Boolean>): Query = apply {
-        statement.where(clause)
+    fun where(condition: Expression<Boolean>): Query = apply {
+        statement.where(condition)
     }
 
     override fun distinct(): Query = apply {
@@ -21,8 +21,12 @@ class Select(private val from: FieldSet) : Query() {
         statement.orderBy(order.map { (clause, sort) -> OrderByClause(clause, sort) })
     }
 
-    override fun groupBy(vararg columns: Expression<*>): Query = apply {
+    override fun groupBy(vararg columns: Expression<*>): Select = apply {
         statement.groupBy(*columns)
+    }
+
+    override fun having(condition: Expression<Boolean>): Select = apply {
+        statement.having(condition)
     }
 
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }

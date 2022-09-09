@@ -11,11 +11,13 @@ class SelectStatement(
     private var offset: Int = 0
     private var counting: Boolean = false
     private var distinct: Boolean = false
+    private var having: Expression<*>? = null
+
     private val groupedBy: MutableList<Expression<*>> = mutableListOf()
     private val orderedBy: MutableList<Expression<*>> = mutableListOf()
 
-    fun where(clause: Expression<Boolean>): SelectStatement = apply {
-        where = clause
+    fun where(condition: Expression<Boolean>): SelectStatement = apply {
+        where = condition
     }
 
     fun limitTo(count: Int, start: Int): SelectStatement = apply {
@@ -31,10 +33,14 @@ class SelectStatement(
         distinct = true
     }
 
-    fun groupBy(vararg expressions: Expression<*>): SelectStatement = groupBy(expressions.toList())
+    fun groupBy(vararg columns: Expression<*>): SelectStatement = groupBy(columns.toList())
 
-    fun groupBy(expressions: Iterable<Expression<*>>): SelectStatement = apply {
-        groupedBy += expressions
+    fun groupBy(columns: Iterable<Expression<*>>): SelectStatement = apply {
+        groupedBy += columns
+    }
+
+    fun having(condition: Expression<Boolean>): SelectStatement = apply {
+        having = condition
     }
 
     fun orderBy(vararg expressions: Expression<*>) = orderBy(expressions.toList())
@@ -65,16 +71,16 @@ class SelectStatement(
         if(!counting) {
             if (groupedBy.isNotEmpty()) {
                 append(" GROUP BY ")
-                groupedBy.join {
-                    +it
-                }
+                groupedBy.join { +it }
             }
-            
+
+            having?.let {
+                append(" HAVING ", it)
+            }
+
             if (orderedBy.isNotEmpty()) {
                 append(" ORDER BY ")
-                orderedBy.join {
-                    +it
-                }
+                orderedBy.join { +it }
             }
         }
 
