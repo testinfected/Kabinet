@@ -7,13 +7,13 @@ import java.sql.ResultSet
 class Select(private val from: FieldSet) : Query() {
     private val statement = SelectStatement(from)
 
-    fun where(condition: String, vararg args: Any?): Query = where(condition.asExpression(*args))
+    fun where(condition: String, vararg args: Any?): Select = where(condition.asExpression(*args))
 
-    fun where(condition: Expression<Boolean>): Query = apply {
+    fun where(condition: Expression<Boolean>): Select = apply {
         statement.where(condition)
     }
 
-    override fun distinct(): Query = apply {
+    fun distinct(): Select = apply {
         statement.distinctOnly()
     }
 
@@ -21,11 +21,11 @@ class Select(private val from: FieldSet) : Query() {
         statement.orderBy(order.map { (expression, sort) -> OrderedBy(expression, sort) })
     }
 
-    override fun groupBy(vararg columns: Expression<*>): Select = apply {
+    fun groupBy(vararg columns: Expression<*>): Select = apply {
         statement.groupBy(*columns)
     }
 
-    override fun having(condition: Expression<Boolean>): Select = apply {
+    fun having(condition: Expression<Boolean>): Select = apply {
         statement.having(condition)
     }
 
@@ -63,15 +63,25 @@ class Select(private val from: FieldSet) : Query() {
     }
 }
 
-fun FieldSet.selectAll(): Query = Select.from(this)
 
-fun FieldSet.selectWhere(clause: String, vararg args: Any?): Query =
+private class OrderedBy(private val expression: Expression<*>, private val sort: SortOrder) : Expression<Nothing> {
+    override fun build(statement: SqlBuilder) = statement {
+        append(expression)
+        append(" ")
+        append(sort.name)
+    }
+}
+
+
+fun FieldSet.selectAll(): Select = Select.from(this)
+
+fun FieldSet.selectWhere(clause: String, vararg args: Any?): Select =
     selectWhere(clause.asExpression(*args))
 
-fun FieldSet.selectWhere(expression: SqlBuilder.() -> Unit): Query =
+fun FieldSet.selectWhere(expression: SqlBuilder.() -> Unit): Select =
     selectWhere(Expression.build(expression))
 
-fun FieldSet.selectWhere(expression: Expression<Boolean>): Query =
+fun FieldSet.selectWhere(expression: Expression<Boolean>): Select =
     Select.from(this).where(expression)
 
 fun <R> FieldSet.selectAll(executor: StatementExecutor, hydrate: Hydrator<R>): List<R> =
@@ -81,10 +91,14 @@ fun <R> FieldSet.selectAll(connection: Connection, hydrate: Hydrator<R>): List<R
     selectAll(StatementExecutor(connection), hydrate)
 
 
-private class OrderedBy(private val expression: Expression<*>, private val sort: SortOrder) : Expression<Nothing> {
-    override fun build(statement: SqlBuilder) = statement {
-        append(expression)
-        append(" ")
-        append(sort.name)
-    }
-}
+fun <T> Select.listDistinct(executor: StatementExecutor, hydrate: Hydrator<T>): List<T> =
+    distinct().list(executor, hydrate)
+
+fun <T> Select.listDistinct(connection: Connection, hydrate: Hydrator<T>): List<T> =
+    listDistinct(StatementExecutor(connection), hydrate)
+
+fun Select.countDistinct(executor: StatementExecutor): Long =
+    distinct().count(executor)
+
+fun Select.countDistinct(connection: Connection): Long =
+    countDistinct(StatementExecutor(connection))

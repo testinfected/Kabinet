@@ -8,12 +8,6 @@ typealias Hydrator<T> = (ResultRow) -> T
 
 abstract class Query {
 
-    abstract fun distinct(): Query
-
-    abstract fun groupBy(vararg columns: Expression<*>): Query
-
-    abstract fun having(condition: Expression<Boolean>): Query
-
     abstract fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query
 
     abstract fun limit(count: Int, offset: Int = 0): Query
@@ -35,18 +29,6 @@ fun Query.count(connection: Connection): Long =
 
 fun <T> Query.firstOrNull(connection: Connection, hydrate: Hydrator<T>): T? =
     firstOrNull(StatementExecutor(connection), hydrate)
-
-fun <T> Query.listDistinct(executor: StatementExecutor, hydrate: Hydrator<T>): List<T> =
-    distinct().list(executor, hydrate)
-
-fun <T> Query.listDistinct(connection: Connection, hydrate: Hydrator<T>): List<T> =
-    listDistinct(StatementExecutor(connection), hydrate)
-
-fun Query.countDistinct(executor: StatementExecutor): Long =
-    distinct().count(executor)
-
-fun Query.countDistinct(connection: Connection): Long =
-    countDistinct(StatementExecutor(connection))
 
 
 enum class SortOrder {
