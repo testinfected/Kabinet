@@ -17,8 +17,8 @@ class Select(private val from: FieldSet) : Query() {
         statement.distinctOnly()
     }
 
-    override fun orderBy(expression: Expression<*>): Query = apply {
-        statement.orderBy(expression)
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query = apply {
+        statement.orderBy(order.map { (clause, sort) -> OrderByClause(clause, sort) })
     }
 
     override fun limit(count: Int, offset: Int): Query = apply { statement.limitTo(count, start = offset) }
@@ -72,3 +72,12 @@ fun <R> FieldSet.selectAll(executor: StatementExecutor, hydrate: Hydrator<R>): L
 fun <R> FieldSet.selectAll(connection: Connection, hydrate: Hydrator<R>): List<R> =
     selectAll(StatementExecutor(connection), hydrate)
 
+
+
+class OrderByClause(private val clause: Expression<*>, private val sort: SortOrder) : Expression<Nothing> {
+    override fun build(statement: SqlBuilder) = statement {
+        append(clause)
+        append(" ")
+        append(sort.name)
+    }
+}

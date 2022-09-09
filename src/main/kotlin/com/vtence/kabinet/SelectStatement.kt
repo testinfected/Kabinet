@@ -30,8 +30,10 @@ class SelectStatement(
         distinct = true
     }
 
-    fun orderBy(expression: Expression<*>) = apply {
-        orderByClauses += expression
+    fun orderBy(vararg expressions: Expression<*>) = orderBy(expressions.toList())
+
+    fun orderBy(expressions: Iterable<Expression<*>>) = apply {
+        orderByClauses += expressions
     }
 
     override fun build(statement: SqlBuilder) = statement {

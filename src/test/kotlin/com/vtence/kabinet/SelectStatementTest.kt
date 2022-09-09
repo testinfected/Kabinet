@@ -107,33 +107,12 @@ class SelectStatementTest {
     }
 
     @Test
-    fun `supports order by clause`() {
+    fun `supports order by clauses`() {
         val select = SelectStatement(Products)
-            .orderBy("number DESC".asExpression<Nothing>())
+            .orderBy("name".asExpression<Nothing>(), "number DESC".asExpression<Nothing>())
 
         assertThat("sql", select.toSql(), equalTo(
-            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY number DESC"
-        ))
-    }
-
-    @Test
-    fun `supports parameters in order by clause`() {
-        val select = SelectStatement(Products)
-            .orderBy("substring(number from ? for ?) DESC".asExpression<Nothing>(1, 3))
-
-        assertThat("sql", select.toSql(), equalTo(
-            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY substring(number from 1 for 3) DESC"
-        ))
-    }
-
-    @Test
-    fun `supports multiple order by clauses`() {
-        val select = SelectStatement(Products)
-            .orderBy("number DESC".asExpression<Nothing>())
-            .orderBy("name ASC".asExpression<Nothing>())
-
-        assertThat("sql", select.toSql(), equalTo(
-            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY number DESC, name ASC"
+            "SELECT products.id, products.number, products.name, products.description FROM products ORDER BY name, number DESC"
         ))
     }
 

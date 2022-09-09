@@ -10,9 +10,7 @@ import com.vtence.kabinet.Products.id
 import com.vtence.kabinet.Products.name
 import com.vtence.kabinet.Products.number
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -422,37 +420,6 @@ class SelectionTest {
     }
 
     @Test
-    fun `ordering extracted records, using a literal expression`() {
-        val id = persisted(frenchie)
-        val one = Item(productId = id, number = "0001", price = BigDecimal(3199))
-        val two = Item(productId = id, number = "0002", price = BigDecimal(3299))
-        val three = Item(productId = id, number = "0003", price = BigDecimal(3399))
-
-        listOf(one, two, three).forEach { it.id = persisted(it)}
-
-        val order = Order(number = 10000001) + one + two + three
-        persisted(order).let { order.id = it }
-
-        val numbers = LineItems
-            .slice(LineItems.itemNumber)
-            .selectWhere("order_id = ?", order.id)
-            .orderBy("order_line DESC")
-            .list(recorder) { it[LineItems.itemNumber] }
-
-        assertThat(
-            "ordered selection", numbers, equalTo(listOf("0003", "0002", "0001"))
-        )
-
-        recorder.assertSql(
-            "SELECT line_items.item_number " +
-                    "FROM line_items " +
-                    "WHERE order_id = ${order.id} " +
-                    "ORDER BY order_line DESC"
-        )
-    }
-
-
-    @Test
     fun `ordering extracted records, using a column expression`() {
         val id = persisted(frenchie)
         val one = Item(productId = id, number = "0001", price = BigDecimal(3199))
@@ -479,6 +446,36 @@ class SelectionTest {
                     "FROM line_items " +
                     "WHERE order_id = ${order.id} " +
                     "ORDER BY line_items.order_line DESC"
+        )
+    }
+
+    @Test
+    fun `ordering extracted records, using a literal expression`() {
+        val id = persisted(frenchie)
+        val one = Item(productId = id, number = "0001", price = BigDecimal(3199))
+        val two = Item(productId = id, number = "0002", price = BigDecimal(3299))
+        val three = Item(productId = id, number = "0003", price = BigDecimal(3399))
+
+        listOf(one, two, three).forEach { it.id = persisted(it)}
+
+        val order = Order(number = 10000001) + one + two + three
+        persisted(order).let { order.id = it }
+
+        val numbers = LineItems
+            .slice(LineItems.itemNumber)
+            .selectWhere("order_id = ?", order.id)
+            .orderBy("substring(item_number from ? for ?)".asExpression<Nothing>(4, 1), SortOrder.DESC)
+            .list(recorder) { it[LineItems.itemNumber] }
+
+        assertThat(
+            "ordered selection", numbers, equalTo(listOf("0003", "0002", "0001"))
+        )
+
+        recorder.assertSql(
+            "SELECT line_items.item_number " +
+                    "FROM line_items " +
+                    "WHERE order_id = ${order.id} " +
+                    "ORDER BY substring(item_number from 4 for 1) DESC"
         )
     }
 }

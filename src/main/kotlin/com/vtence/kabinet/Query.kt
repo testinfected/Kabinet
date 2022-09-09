@@ -10,6 +10,8 @@ abstract class Query {
 
     abstract fun distinct(): Query
 
+    abstract fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query
+
     abstract fun limit(count: Int, offset: Int = 0): Query
 
     fun <T> firstOrNull(executor: StatementExecutor, hydrate: Hydrator<T>): T? =
@@ -18,8 +20,6 @@ abstract class Query {
     abstract fun <T> list(executor: StatementExecutor, hydrate: Hydrator<T>): List<T>
 
     abstract fun count(executor: StatementExecutor): Long
-
-    abstract fun orderBy(expression: Expression<*>): Query
 }
 
 
@@ -51,18 +51,7 @@ enum class SortOrder {
 
 fun Query.orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC): Query = orderBy(column to order)
 
-fun Query.orderBy(vararg order: Pair<Expression<*>, SortOrder>): Query = apply {
-    order.forEach { (clause, sort) ->
-        orderBy {
-            it.append(clause)
-            it.append(" ")
-            it.append(sort.name)
-        }
-    }
-}
-
-fun Query.orderBy(clause: String, vararg parameters: Any?): Query =
-    orderBy(clause.asExpression<Nothing>(*parameters))
+fun Query.orderBy(clause: String, order: SortOrder = SortOrder.ASC, vararg parameters: Any?): Query = orderBy(clause.asExpression<Nothing>(*parameters), order)
 
 
 
