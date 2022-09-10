@@ -8,7 +8,7 @@ typealias Hydrator<T> = (ResultRow) -> T
 
 abstract class Query<Q : Query<Q>> {
 
-    abstract fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Q
+    abstract fun orderBy(vararg expressions: Expression<*>): Q
 
     abstract fun limit(count: Int, offset: Int = 0): Q
 
@@ -30,14 +30,44 @@ fun <T, Q : Query<Q>> Q.count(connection: Connection): Long =
 fun <T, Q : Query<Q>> Q.firstOrNull(connection: Connection, hydrate: Hydrator<T>): T? =
     firstOrNull(StatementExecutor(connection), hydrate)
 
+fun <Q : Query<Q>> Q.orderBy(vararg order: Pair<Expression<*>, Sorting>): Q =
+    orderBy(*order.map { (expression, sort) -> OrderedBy(expression, sort) }.toTypedArray())
 
-enum class SortOrder {
-    ASC, DESC
+fun <Q : Query<Q>> Q.orderBy(expression: Expression<*>, direction: SortDirection = SortDirection.ASC, option: SortOption? = null): Q =
+    orderBy(expression to Sorting(direction, option))
+
+fun <Q : Query<Q>> Q.orderBy(expression: String, vararg parameters: Any?): Q =
+    orderBy(expression.asExpression<Nothing>(*parameters))
+
+
+enum class SortDirection {
+    ASC, DESC;
+
+    operator fun invoke(option: SortOption): Sorting = Sorting(this, option)
 }
 
-fun <Q : Query<Q>> Q.orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC): Q = orderBy(column to order)
+enum class SortOption {
+    NULLS_FIRST, NULLS_LAST
+}
 
-fun <Q : Query<Q>> Q.orderBy(clause: String, order: SortOrder = SortOrder.ASC, vararg parameters: Any?): Q = orderBy(clause.asExpression<Nothing>(*parameters), order)
+data class Sorting(val direction: SortDirection, val option: SortOption? = null)
+
+infix fun Expression<*>.to(order: SortDirection) = this to Sorting(order)
 
 
+private class OrderedBy(private val expression: Expression<*>, private val sorting: Sorting) : Expression<Nothing> {
+    override fun build(statement: SqlBuilder) = statement {
+        append(expression)
+        append(" ", when(sorting.direction) {
+            SortDirection.ASC -> "ASC"
+            SortDirection.DESC -> "DESC"
+        })
+        sorting.option?.let {
+            append(" ", when(it) {
+                SortOption.NULLS_FIRST -> "NULLS FIRST"
+                SortOption.NULLS_LAST -> "NULLS LAST"
+            })
+        }
+    }
+}
 

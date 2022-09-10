@@ -9,6 +9,8 @@ import com.vtence.kabinet.ProductThat.hasSameStateAs
 import com.vtence.kabinet.Products.id
 import com.vtence.kabinet.Products.name
 import com.vtence.kabinet.Products.number
+import com.vtence.kabinet.SortOption.NULLS_FIRST
+import com.vtence.kabinet.SortDirection.DESC
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.test.AfterTest
@@ -34,7 +36,6 @@ class SelectionTest {
     }
 
     val frenchie = Product(number = 77777777, name = "French Bulldog", description = "A cute, family dog")
-    val pug = Product(number = 88888888, name = "Pug", description = "A funny little dog")
 
     @Test
     fun `retrieving a record from a table`() {
@@ -42,7 +43,7 @@ class SelectionTest {
 
         val records = Products.selectAll(recorder) { it.product }
 
-        assertThat("record", records, anyElement(hasSameStateAs(frenchie.copy(id = id))))
+        assertThat(records, anyElement(hasSameStateAs(frenchie.copy(id = id))))
 
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
@@ -56,17 +57,14 @@ class SelectionTest {
         persisted(bully)
         persisted(lab)
 
-        val selection = Products.selectAll(recorder) { it.product }
+        val records = Products.selectAll(recorder) { it.product }
 
-        assertThat("selection", selection, hasSize(equalTo(3)))
-        assertThat(
-            "selected", selection,
+        assertThat(records,
             anyElement(hasName("French Bulldog")) and
                     anyElement(hasName("English Bulldog")) and
-                    anyElement(
-                        hasName("Labrador Retriever")
-                    )
+                    anyElement(hasName("Labrador Retriever"))
         )
+        assertThat(records, hasSize(equalTo(3)))
 
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products")
     }
@@ -77,9 +75,9 @@ class SelectionTest {
         persisted(bully)
         persisted(lab)
 
-        val selection = Products.selectAll().firstOrNull(recorder) { it.product }
+        val record = Products.selectAll().firstOrNull(recorder) { it.product }
 
-        assertThat("selected", selection, present(hasName("French Bulldog")))
+        assertThat(record, present(hasName("French Bulldog")))
 
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products LIMIT 1")
     }
@@ -93,14 +91,14 @@ class SelectionTest {
         persisted(bully)
         persisted(dalmatian)
 
-        val selection =
+        val records =
             Products
                 .selectAll()
                 .limit(2, offset = 1)
                 .list(recorder) { it.product }
 
-        assertThat("selected", selection, allElements(hasName(containsSubstring("Bulldog"))))
-        assertThat("selection", selection, hasSize(equalTo(2)))
+        assertThat(records, allElements(hasName(containsSubstring("Bulldog"))))
+        assertThat(records, hasSize(equalTo(2)))
 
         recorder.assertSql("SELECT products.id, products.number, products.name, products.description FROM products LIMIT 2 OFFSET 1")
     }
@@ -111,12 +109,12 @@ class SelectionTest {
         persisted(frenchie)
         persisted(dalmatian)
 
-        val selection =
+        val records =
             Products
                 .selectWhere("name = ?", "French Bulldog")
                 .list(recorder) { it.product }
 
-        assertThat("selected", selection, anyElement(hasName(containsSubstring("Bulldog"))))
+        assertThat(records, anyElement(hasName(containsSubstring("Bulldog"))))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description FROM products " +
@@ -128,12 +126,12 @@ class SelectionTest {
     fun `selecting only a subset of the table columns`() {
         persisted(frenchie)
 
-        val slices =
+        val records =
             Products
                 .slice(number, name)
                 .selectAll(recorder) { it[number] to it[name] }
 
-        assertThat("slices", slices, hasElement(77777777 to "French Bulldog"))
+        assertThat(records, hasElement(77777777 to "French Bulldog"))
 
         recorder.assertSql("SELECT products.number, products.name FROM products")
     }
@@ -146,12 +144,12 @@ class SelectionTest {
 
         val count = intLiteral("count(*)")
 
-        val expr =
+        val total =
             Products
                 .select(count)
                 .firstOrNull(recorder) { it[count] }
 
-        assertThat("expr", expr, equalTo(3))
+        assertThat(total, equalTo(3))
 
         recorder.assertSql("SELECT count(*) FROM products LIMIT 1")
     }
@@ -162,14 +160,14 @@ class SelectionTest {
         persisted(dalmatian)
         persisted(lab)
 
-        val selection =
+        val records =
             Products
                 .alias("p")
                 .selectWhere("p.name = ?", "Labrador Retriever")
                 .list(recorder) { it.product("p") }
 
-        assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
-        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat(records, anyElement(hasName("Labrador Retriever")))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT p.id, p.number, p.name, p.description " +
@@ -184,14 +182,14 @@ class SelectionTest {
         persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
         persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
-        val selection =
+        val records =
             Products
                 .join(Items, "products.id = items.product_id")
                 .selectWhere("items.price > ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
-        assertThat("selected", selection, anyElement(hasName("Boxer")))
-        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat(records, anyElement(hasName("Boxer")))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price, items.on_sale " +
@@ -204,14 +202,14 @@ class SelectionTest {
         persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
         persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
-        val selection =
+        val records =
             Products
                 .join(Items, id, productId)
                 .selectWhere("items.price < ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
-        assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
-        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat(records, anyElement(hasName("Labrador Retriever")))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price, items.on_sale " +
@@ -227,14 +225,14 @@ class SelectionTest {
         }
         persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
-        val selection =
+        val records =
             Products
                 .join(Items, id, productId, "$name <> ?", boxer.name)
                 .selectWhere("items.price < ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
-        assertThat("selected", selection, anyElement(hasName("Labrador Retriever")))
-        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat(records, anyElement(hasName("Labrador Retriever")))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description, items.id, items.number, items.product_id, items.price, items.on_sale " +
@@ -247,14 +245,14 @@ class SelectionTest {
         persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
         persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
-        val selection =
+        val records =
             Products
                 .join(Items.alias("item"), "products.id = item.product_id")
                 .selectWhere("item.price > ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
-        assertThat("selected", selection, anyElement(hasName("Boxer")))
-        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat(records, anyElement(hasName("Boxer")))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description, item.id, item.number, item.product_id, item.price, item.on_sale " +
@@ -263,19 +261,19 @@ class SelectionTest {
     }
 
     @Test
-    fun `retrieving only the joined table columns`() {
+    fun `retrieving only the source table columns`() {
         persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
         persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
-        val selection =
+        val records =
             Products
                 .join(Items.alias("item"), "products.id = item.product_id")
                 .slice(Products)
                 .selectWhere("item.price > ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
-        assertThat("selected", selection, anyElement(hasName("Boxer")))
-        assertThat("selection", selection, hasSize(equalTo(1)))
+        assertThat(records, anyElement(hasName("Boxer")))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description " +
@@ -293,25 +291,20 @@ class SelectionTest {
 
         persisted(paid.paymentAt(LocalDateTime.parse("2021-12-25T15:00")))
 
-        val selection =
+        val records =
             Orders
                 .leftJoin(Payments, Orders.id, Payments.orderId)
                 .slice(Orders)
-                .selectWhere("orders.number > ?", 20000000L)
+                .selectWhere("payments.amount IS NOT NULL")
                 .list(recorder) { it.order }
 
-        assertThat(
-            "selected", selection, allOf(
-                anyElement(hasNumber(20000001)),
-                anyElement(hasNumber(20000002))
-            )
-        )
-        assertThat("selection", selection, hasSize(equalTo(2)))
+        assertThat(records, allElements(hasNumber(20000002)))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT orders.id, orders.number, orders.placed_at " +
                     "FROM orders LEFT JOIN payments ON orders.id = payments.order_id " +
-                    "WHERE orders.number > 20000000"
+                    "WHERE payments.amount IS NOT NULL"
         )
     }
 
@@ -333,15 +326,15 @@ class SelectionTest {
         val item = Items.alias("item")
         val other = Items.alias("other")
 
-        val selection = product
+        val records = product
             .join(item, product[id], item[productId])
             .leftJoin(other, product[id], other[productId])
             .slice(product[name])
             .selectWhere("item.number <> other.number AND item.price = other.price")
             .listDistinct(recorder) { it[product[name]] }
 
-        assertThat("selection", selection, hasSize(equalTo(1)))
-        assertThat("selection", selection, anyElement(equalTo("French Bulldog")))
+        assertThat(records, allElements(equalTo("French Bulldog")))
+        assertThat(records, hasSize(equalTo(1)))
 
         recorder.assertSql(
             "SELECT DISTINCT product.name " +
@@ -365,7 +358,7 @@ class SelectionTest {
                 .selectWhere("number like '1%'")
                 .count(recorder)
 
-        assertThat("total orders", count, equalTo(3))
+        assertThat(count, equalTo(3))
 
         recorder.assertSql(
             "SELECT COUNT(*) FROM orders WHERE number like '1%'"
@@ -387,7 +380,7 @@ class SelectionTest {
             .listDistinct(recorder) { it.product }
 
 
-        assertThat("distinct products", uniques, hasSize(equalTo(3)))
+        assertThat("total distinct products", uniques, hasSize(equalTo(3)))
 
         recorder.assertSql(
             "SELECT DISTINCT products.id, products.number, products.name, products.description " +
@@ -411,7 +404,7 @@ class SelectionTest {
             .selectAll()
             .countDistinct(recorder)
 
-        assertThat("count", count, equalTo(3))
+        assertThat("total count", count, equalTo(3))
 
         recorder.assertSql(
             "SELECT COUNT(DISTINCT (products.id, products.number, products.name, products.description)) " +
@@ -421,72 +414,80 @@ class SelectionTest {
     }
 
     @Test
-    fun `ordering extracted records, using a column expression`() {
-        val frenchies = persisted(frenchie).let { id ->
-            listOf(
-                Item(productId = id, number = "0001", price = BigDecimal(3199)),
-                Item(productId = id, number = "0002", price = BigDecimal(3299)),
-                Item(productId = id, number = "0003", price = BigDecimal(3399))
-            ).map {
-                it.apply { this.id = persisted(it) }
-            }
+    fun `ordering records using a column expression`() {
+        persisted(frenchie).let { id ->
+            persisted(Item(productId = id, number = "0001", price = BigDecimal(3199)))
+            persisted(Item(productId = id, number = "0002", price = BigDecimal(3299)))
+            persisted(Item(productId = id, number = "0003", price = BigDecimal(3399)))
         }
 
-        val order = (Order(number = 10000001) + frenchies).also {
-            it.id = persisted(it)
-        }
-
-        val selection = LineItems
-            .slice(LineItems.itemNumber)
-            .selectWhere("order_id = ?", order.id)
-            .orderBy(LineItems.index, SortOrder.DESC)
-            .list(recorder) { it[LineItems.itemNumber] }
+        val numbers = Items
+            .slice(Items.number)
+            .selectAll()
+            .orderBy(Items.number, DESC)
+            .list(recorder) { it[Items.number] }
 
         assertThat(
-            "ordered selection", selection, equalTo(listOf("0003", "0002", "0001"))
+            "ordered records", numbers, equalTo(listOf("0003", "0002", "0001"))
         )
 
         recorder.assertSql(
-            "SELECT line_items.item_number " +
-                    "FROM line_items " +
-                    "WHERE order_id = ${order.id} " +
-                    "ORDER BY line_items.order_line DESC"
+            "SELECT items.number " +
+            "FROM items " +
+            "ORDER BY items.number DESC"
         )
     }
 
     @Test
-    fun `ordering extracted records, using a literal expression`() {
-        val frenchies = persisted(frenchie).let { id ->
-            listOf(
-                Item(productId = id, number = "0001", price = BigDecimal(3199)),
-                Item(productId = id, number = "0002", price = BigDecimal(3299)),
-                Item(productId = id, number = "0003", price = BigDecimal(3399))
-            ).map {
-                it.apply { this.id = persisted(it) }
-            }
+    fun `ordering records using a literal expression`() {
+        persisted(frenchie).let { id ->
+            persisted(Item(productId = id, number = "0001", price = BigDecimal(3199)))
+            persisted(Item(productId = id, number = "0002", price = BigDecimal(3299)))
+            persisted(Item(productId = id, number = "0003", price = BigDecimal(3399)))
         }
 
-        val order = (Order(number = 10000001) + frenchies).also {
-            it.id = persisted(it)
-        }
-
-        val numbers = LineItems
-            .slice(LineItems.itemNumber)
-            .selectWhere("order_id = ?", order.id)
-            .orderBy("substring(item_number from ? for ?)".asExpression<Nothing>(4, 1), SortOrder.DESC)
-            .list(recorder) { it[LineItems.itemNumber] }
+        val numbers = Items
+            .slice(Items.number)
+            .selectAll()
+            .orderBy("substring(number from ? for ?)".asExpression<Nothing>(4, 1), DESC)
+            .list(recorder) { it[Items.number] }
 
         assertThat(
             "ordered selection", numbers, equalTo(listOf("0003", "0002", "0001"))
         )
 
         recorder.assertSql(
-            "SELECT line_items.item_number " +
-                    "FROM line_items " +
-                    "WHERE order_id = ${order.id} " +
-                    "ORDER BY substring(item_number from 4 for 1) DESC"
+            "SELECT items.number " +
+                    "FROM items " +
+                    "ORDER BY substring(number from 4 for 1) DESC"
         )
     }
+
+    @Test
+    fun `ordering records using a sort option`() {
+        persisted(frenchie).let { id ->
+            persisted(Item(productId = id, number = "0001", price = BigDecimal(3199.00)))
+            persisted(Item(productId = id, number = "0002", price = BigDecimal(3299.00)))
+            persisted(Item(productId = id, number = "0003", price = BigDecimal(3299.00)))
+            persisted(Item(productId = id, number = "0004", price = null))
+        }
+
+        val items = Items
+            .slice(Items.price, Items.number)
+            .selectAll()
+            .orderBy(Items.price to DESC(NULLS_FIRST), Items.number to DESC)
+            .list(recorder) { it[Items.number] }
+
+        assertThat(items, equalTo(listOf("0004", "0003", "0002", "0001")))
+
+        recorder.assertSql(
+            "SELECT items.price, items.number " +
+                    "FROM items " +
+                    "ORDER BY items.price DESC NULLS FIRST, items.number DESC"
+        )
+    }
+
+    val pug = Product(number = 88888888, name = "Pug", description = "A funny little dog")
 
     @Test
     fun `grouping records`() {

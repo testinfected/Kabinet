@@ -17,8 +17,8 @@ class Select(private val from: FieldSet) : Query<Select>() {
         statement.distinctOnly()
     }
 
-    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): Select = apply {
-        statement.orderBy(order.map { (expression, sort) -> OrderedBy(expression, sort) })
+    override fun orderBy(vararg expressions: Expression<*>): Select = apply {
+        statement.orderBy(*expressions)
     }
 
     fun groupBy(vararg columns: Expression<*>): Select = apply {
@@ -60,15 +60,6 @@ class Select(private val from: FieldSet) : Query<Select>() {
 
     companion object {
         fun from(fields: FieldSet): Select = Select(fields)
-    }
-}
-
-
-private class OrderedBy(private val expression: Expression<*>, private val sort: SortOrder) : Expression<Nothing> {
-    override fun build(statement: SqlBuilder) = statement {
-        append(expression)
-        append(" ")
-        append(sort.name)
     }
 }
 

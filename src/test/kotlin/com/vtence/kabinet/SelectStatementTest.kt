@@ -139,10 +139,10 @@ class SelectStatementTest {
     @Test
     fun `supports order by clauses`() {
         val select = SelectStatement(Products.slice(Products.id))
-            .orderBy("name".asExpression<Nothing>(), "number DESC".asExpression<Nothing>())
+            .orderBy("name".asExpression<Nothing>(), "number DESC NULLS FIRST".asExpression<Nothing>())
 
         assertThat("sql", select.toSql(), equalTo(
-            "SELECT products.id FROM products ORDER BY name, number DESC"
+            "SELECT products.id FROM products ORDER BY name, number DESC NULLS FIRST"
         ))
     }
 
