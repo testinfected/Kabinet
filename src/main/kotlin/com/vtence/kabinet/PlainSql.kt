@@ -37,6 +37,10 @@ class PlainSql(sql: String) {
             it.executeUpdate()
         })
     }
+
+    override fun toString(): String {
+        return super.toString()
+    }
 }
 
 fun PlainSql.insert(connection: Connection): Unit = insert(StatementExecutor(connection))

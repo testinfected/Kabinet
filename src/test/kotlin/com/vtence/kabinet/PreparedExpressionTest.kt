@@ -66,3 +66,11 @@ class PreparedExpressionTest {
         assertThat("args", expression.arguments(), isEmpty)
     }
 }
+
+
+private fun Expression<*>.toSql(prepared: Boolean = false) = buildStatement(prepared) {
+    +this@toSql
+}.asSql()
+
+private fun Expression<*>.arguments(): List<Argument<*>> = buildStatement { +this@arguments }.arguments
+

@@ -2,7 +2,7 @@ package com.vtence.kabinet
 
 import java.sql.PreparedStatement
 
-class UpdateStatement(private val set: ColumnSet, private val values: Iterable<Any?>) : Expression<Nothing>, Preparable {
+class UpdateStatement(private val set: ColumnSet, private val values: Iterable<Any?>) :  SqlStatement, Preparable {
     private var whereClause: Expression<Boolean>? = null
 
     fun where(clause: Expression<Boolean>): UpdateStatement = apply {
@@ -22,7 +22,7 @@ class UpdateStatement(private val set: ColumnSet, private val values: Iterable<A
         }
     }
 
-    override fun <T> prepare(query: (PreparedStatement) -> T): JdbcStatement<T> {
-        return PreparedJdbcStatement(this, query, false)
+    override fun <T> prepare(execute: (PreparedStatement) -> T): JdbcStatement<T> {
+        return PreparedJdbcStatement(this, execute, false)
     }
 }

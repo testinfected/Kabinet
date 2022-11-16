@@ -13,6 +13,8 @@ class Delete(table: Table): Command {
         statement.where(expression)
     }
 
+    override fun toString(): String = statement.toSql()
+
     companion object {
         fun from(table: Table): Delete = Delete(table)
     }

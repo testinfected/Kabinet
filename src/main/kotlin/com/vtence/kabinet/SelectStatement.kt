@@ -4,7 +4,7 @@ import java.sql.PreparedStatement
 
 class SelectStatement(
     private val from: FieldSet,
-) : Expression<Nothing>, Preparable {
+) :  SqlStatement, Preparable {
 
     private var where: Expression<Boolean>? = null
     private var limit: Int? = null
@@ -90,7 +90,7 @@ class SelectStatement(
         }
     }
 
-    override fun <T> prepare(query: (PreparedStatement) -> T): JdbcStatement<T> {
-        return PreparedJdbcStatement(this, query, false)
+    override fun <T> prepare(execute: (PreparedStatement) -> T): JdbcStatement<T> {
+        return PreparedJdbcStatement(this, execute, false)
     }
 }

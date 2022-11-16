@@ -1,5 +1,6 @@
 package com.vtence.kabinet
 
+import com.vtence.kabinet.Expression.Companion.build
 import java.sql.Connection
 import java.sql.ResultSet
 
@@ -56,6 +57,10 @@ class Select(private val from: FieldSet) : Query<Select>() {
         return result.toList()
     }
 
+    override fun <T> asExpression(): Expression<T> = build {
+        statement.build(this)
+    }
+
     override fun toString(): String = statement.toSql()
 
     companion object {
@@ -70,7 +75,7 @@ fun FieldSet.selectWhere(clause: String, vararg args: Any?): Select =
     selectWhere(clause.asExpression(*args))
 
 fun FieldSet.selectWhere(expression: SqlBuilder.() -> Unit): Select =
-    selectWhere(Expression.build(expression))
+    selectWhere(build(expression))
 
 fun FieldSet.selectWhere(expression: Expression<Boolean>): Select =
     Select.from(this).where(expression)

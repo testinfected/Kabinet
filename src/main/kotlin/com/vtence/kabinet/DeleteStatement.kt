@@ -2,7 +2,7 @@ package com.vtence.kabinet
 
 import java.sql.PreparedStatement
 
-class DeleteStatement(private val table: Table): Expression<Nothing>, Preparable {
+class DeleteStatement(private val table: Table):  SqlStatement, Preparable {
     private var whereClause: Expression<Boolean>? = null
 
     fun where(clause: Expression<Boolean>): DeleteStatement = apply {
@@ -16,7 +16,7 @@ class DeleteStatement(private val table: Table): Expression<Nothing>, Preparable
         }
     }
 
-    override fun <T> prepare(query: (PreparedStatement) -> T): JdbcStatement<T> {
-        return PreparedJdbcStatement(this, query, false)
+    override fun <T> prepare(execute: (PreparedStatement) -> T): JdbcStatement<T> {
+        return PreparedJdbcStatement(this, execute, false)
     }
 }

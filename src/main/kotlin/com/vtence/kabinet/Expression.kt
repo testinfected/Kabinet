@@ -81,14 +81,10 @@ fun SqlBuilder.append(vararg expressions: Any): SqlBuilder = apply {
 }
 
 
-class SqlStatement(prepared: Boolean) : SqlBuilder(prepared) {
-    companion object {
-        fun prepared(build: SqlBuilder.() -> Unit): SqlBuilder = SqlStatement(prepared = true).apply {
-            this.build()
-        }
+class SqlStatementBuilder(prepared: Boolean) : SqlBuilder(prepared)
 
-        fun plain(): SqlBuilder = SqlStatement(prepared = false)
-    }
+fun buildStatement(prepared: Boolean = false, body: SqlBuilder.() -> Unit): SqlBuilder {
+    return SqlStatementBuilder(prepared).apply(body)
 }
 
 
@@ -120,14 +116,4 @@ private fun instantParam(value: Instant): Expression<Instant> = QueryParameter(v
 private fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, LocalDateColumnType)
 
 private fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, LocalTimeColumnType)
-
-fun buildStatement(prepared: Boolean = false, body: SqlBuilder.() -> Unit): SqlBuilder {
-    return SqlStatement(prepared).apply(body)
-}
-
-fun Expression<*>.toSql(prepared: Boolean = false) = buildStatement(prepared) {
-    +this@toSql
-}.asSql()
-
-fun Expression<*>.arguments(): List<Argument<*>> = SqlStatement.prepared { +this@arguments }.arguments
 

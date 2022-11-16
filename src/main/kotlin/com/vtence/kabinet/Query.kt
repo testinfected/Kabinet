@@ -18,6 +18,8 @@ abstract class Query<Q : Query<Q>> {
     abstract fun <T> list(executor: StatementExecutor, hydrate: Hydrator<T>): List<T>
 
     abstract fun count(executor: StatementExecutor): Long
+
+    abstract fun <T> asExpression(): Expression<T>
 }
 
 
