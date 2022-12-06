@@ -5,8 +5,8 @@ import java.sql.Connection
 import java.sql.ResultSet
 
 
-class Select(private val from: FieldSet) : Query<Select>() {
-    private val statement = SelectStatement(from)
+class Select(override val set: FieldSet) : Query<Select>() {
+    private val statement = SelectStatement(set)
 
     fun where(condition: String, vararg args: Any?): Select = where(condition.asExpression(*args))
 
@@ -51,7 +51,7 @@ class Select(private val from: FieldSet) : Query<Select>() {
     private fun <T> read(rs: ResultSet, items: Hydrator<T>): List<T> {
         val result = mutableListOf<T>()
         while (rs.next()) {
-            val row = ResultRow.readFrom(rs, from.fields)
+            val row = ResultRow.readFrom(rs, set.fields)
             result += row[items]
         }
         return result.toList()

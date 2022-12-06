@@ -558,4 +558,27 @@ class SelectionTest {
                     "HAVING count(items.id) > 2"
         )
     }
+
+    @Test
+    fun `joining with a subquery`() {
+        persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
+        persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
+
+        val items = Items.slice(Items.productId, Items.price).selectAll().alias("things")
+        val records =
+            Products
+                .join(items, condition = "products.id = things.product_id")
+                .slice(Products)
+                .selectWhere("things.price > ?", BigDecimal("1000"))
+                .list(recorder) { it.product }
+
+        assertThat(records, anyElement(hasName("Boxer")))
+        assertThat(records, hasSize(equalTo(1)))
+
+        recorder.assertSql(
+            "SELECT products.id, products.number, products.name, products.description " +
+                    "FROM products INNER JOIN (SELECT items.product_id, items.price FROM items) AS things ON products.id = things.product_id " +
+                    "WHERE things.price > 1000"
+        )
+    }
 }

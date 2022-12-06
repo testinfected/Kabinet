@@ -8,6 +8,8 @@ typealias Hydrator<T> = (ResultRow) -> T
 
 abstract class Query<Q : Query<Q>> {
 
+    abstract val set: FieldSet
+
     abstract fun orderBy(vararg expressions: Expression<*>): Q
 
     abstract fun limit(count: Int, offset: Int = 0): Q
