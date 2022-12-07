@@ -9,33 +9,40 @@ class QueryAliasTest {
 
     @Test
     fun `builds aliased sub query expression`() {
-        val subQuery = QueryAlias(Select.from(Products), "things")
+        val alias = Select.from(Products).alias("things")
 
-        assertThat(subQuery.toSql(), equalTo(
+        assertThat(alias.toSql(), equalTo(
             """(SELECT products.id, products.number, products.name, products.description FROM products) AS things"""))
     }
 
     @Test
     fun `tells columns and fields apart`() {
-        val subQuery = QueryAlias(Select.from(Products.slice(Products + intLiteral("count(*)"))), "things")
+        val alias = Select.from(Products.slice(Products + intLiteral("count(*)"))).alias("things")
 
-        assertThat("all fields", subQuery.fields, hasSize(equalTo(Products.columns.size + 1)))
-        assertThat("columns only", subQuery.columns, hasSize(equalTo(Products.columns.size)))
+        assertThat("all fields", alias.fields, hasSize(equalTo(Products.columns.size + 1)))
+        assertThat("columns only", alias.columns, hasSize(equalTo(Products.columns.size)))
     }
 
     @Test
     fun `aliases original table columns`() {
-        val subQuery = QueryAlias(Products.selectAll(), "things")
+        val alias = Products.selectAll().alias("things")
 
-        assertThat("fields", subQuery.fields, equalTo(Products.alias("things").columns))
+        assertThat("fields", alias.fields, equalTo(Products.alias("things").columns))
     }
 
     @Test
     fun `leaves non column fields unchanged`() {
-        val subQuery = QueryAlias(Select.from(Products.slice(intLiteral("count(*)"))), "things")
+        val alias = Select.from(Products.slice(intLiteral("count(*)"))).alias("things")
 
-        assertThat(subQuery.fields, equalTo(listOf(intLiteral("count(*)"))))
+        assertThat(alias.fields, equalTo(listOf(intLiteral("count(*)"))))
+    }
+
+    @Test
+    fun `retrieves aliased column from original column`() {
+        val alias = Select.from(Products.slice(Products.name)).alias("things")
+
+        val productName = alias[Products.name]
+        assertThat("column name", productName.name, equalTo(Products.name.name))
+        assertThat("aliased table name", productName.table.tableName, equalTo("things"))
     }
 }
-
-private fun Expression<*>.toSql() = SqlStatementBuilder(prepared = false).also { it.append(this) }.asSql()

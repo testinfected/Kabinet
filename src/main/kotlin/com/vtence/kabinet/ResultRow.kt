@@ -73,6 +73,10 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
     }
 }
 
+private fun <T> Field<T>.get(rs: ResultSet, index: Int): T? {
+    return type.get(rs, index)
+}
+
 
 fun ResultSet.read(fields: List<Field<*>>): List<ResultRow> {
     val results = mutableListOf<ResultRow>()

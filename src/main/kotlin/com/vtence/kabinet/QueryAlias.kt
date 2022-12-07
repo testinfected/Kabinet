@@ -3,7 +3,7 @@ package com.vtence.kabinet
 class QueryAlias(private val query: Query<*>, private val alias: String) : ColumnSet {
 
     override val fields: List<Field<*>>
-        get() = query.set.fields.map { (it as? Column<*>)?.alias() ?: it }
+        get() = query.set.fields.map { (it as? Column<*>)?.aliased() ?: it }
 
     override val columns: List<Column<*>>
         get() = fields.filterIsInstance<Column<*>>()
@@ -15,7 +15,12 @@ class QueryAlias(private val query: Query<*>, private val alias: String) : Colum
         append("(", query, ")", " AS $alias")
     }
 
-    private fun <T : Any?> Column<T>.alias() = Column(table.alias(alias), name, type)
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T : Any?> get(original: Column<T>): Column<T> {
+        return query.set.source.columns.find { it == original }?.aliased() as? Column<T> ?: error("Column $original not found")
+    }
+
+    private fun <T : Any?> Column<T>.aliased() = Column(table.alias(alias), name, type)
 }
 
 

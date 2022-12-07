@@ -1,22 +1,9 @@
 package com.vtence.kabinet
 
 import java.math.BigDecimal
-import java.sql.ResultSet
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-
-
-interface Field<T> : Expression<T> {
-    val type: ColumnType<T>
-
-    fun T.asParameter(): Expression<T> = toQueryParameter(this, type)
-}
-
-
-fun <T> Field<T>.get(rs: ResultSet, index: Int): T? {
-    return type.get(rs, index)
-}
 
 
 interface FieldSet : Expression<Nothing> {

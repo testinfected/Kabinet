@@ -6,6 +6,7 @@ import com.vtence.kabinet.Items.productId
 import com.vtence.kabinet.OrderThat.hasNumber
 import com.vtence.kabinet.ProductThat.hasName
 import com.vtence.kabinet.ProductThat.hasSameStateAs
+import com.vtence.kabinet.Products.description
 import com.vtence.kabinet.Products.id
 import com.vtence.kabinet.Products.name
 import com.vtence.kabinet.Products.number
@@ -560,16 +561,43 @@ class SelectionTest {
     }
 
     @Test
-    fun `joining with a subquery`() {
+    fun `selecting from a sub query`() {
+        persisted(frenchie)
+        persisted(pug)
+
+        val dogs = Products.selectAll().alias("dogs")
+
+        val results =
+            Select
+                .from(dogs)
+                .list(recorder) {
+                    Product(
+                        number = it[dogs[number]],
+                        name = it[dogs[name]],
+                        description = it[dogs[description]]
+                    )
+                }
+
+        assertThat(results, equalTo(listOf(frenchie, pug)))
+
+        recorder.assertSql(
+            "SELECT dogs.id, dogs.number, dogs.name, dogs.description " +
+                "FROM (SELECT products.id, products.number, products.name, products.description FROM products) AS dogs"
+        )
+    }
+
+    @Test
+    fun `joining with a sub query`() {
         persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
         persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
-        val items = Items.slice(Items.productId, Items.price).selectAll().alias("things")
+        val dogs = Items.slice(Items.productId, Items.price).selectAll().alias("dogs")
+
         val records =
             Products
-                .join(items, condition = "products.id = things.product_id")
+                .join(dogs, condition = "products.id = dogs.product_id")
                 .slice(Products)
-                .selectWhere("things.price > ?", BigDecimal("1000"))
+                .selectWhere("dogs.price > ?", BigDecimal("1000"))
                 .list(recorder) { it.product }
 
         assertThat(records, anyElement(hasName("Boxer")))
@@ -577,8 +605,8 @@ class SelectionTest {
 
         recorder.assertSql(
             "SELECT products.id, products.number, products.name, products.description " +
-                    "FROM products INNER JOIN (SELECT items.product_id, items.price FROM items) AS things ON products.id = things.product_id " +
-                    "WHERE things.price > 1000"
+                    "FROM products INNER JOIN (SELECT items.product_id, items.price FROM items) AS dogs ON products.id = dogs.product_id " +
+                    "WHERE dogs.price > 1000"
         )
     }
 }

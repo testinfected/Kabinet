@@ -14,6 +14,12 @@ fun interface Expression<T> {
     }
 }
 
+interface Field<T> : Expression<T> {
+    val type: ColumnType<T>
+
+    fun T.asParameter(): Expression<T> = toQueryParameter(this, type)
+}
+
 
 typealias Argument<T> = Pair<ColumnType<T>, T>
 
