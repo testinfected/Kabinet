@@ -56,11 +56,9 @@ class ResultRow(private val fields: Map<Field<*>, Int>) {
     }
 
     companion object {
-        fun readFrom(rs: ResultSet, fields: List<Field<*>>): ResultRow {
-            val indices = fields.mapIndexed { index, col -> col to index }.toMap()
-
-            return ResultRow(indices).also { row ->
-                indices.forEach { (field, index) ->
+        fun readFrom(rs: ResultSet, fieldsIndex: Map<Field<*>, Int>): ResultRow {
+            return ResultRow(fieldsIndex).also { row ->
+                fieldsIndex.forEach { (field, index) ->
                     row[field] = field.get(rs, index + 1)
                 }
             }
@@ -81,10 +79,13 @@ private fun <T> Field<T>.get(rs: ResultSet, index: Int): T? {
 fun ResultSet.read(fields: List<Field<*>>): List<ResultRow> {
     val results = mutableListOf<ResultRow>()
     while (next()) {
-        results += ResultRow.readFrom(this, fields)
+        results += ResultRow.readFrom(this, fields.index())
     }
     return results.toList()
 }
 
+fun Iterable<Field<*>>.index(): Map<Field<*>, Int> {
+    return mapIndexed { index, col -> col to index }.toMap()
+}
 
 operator fun <T> ResultRow.get(hydrator: Hydrator<T>): T = hydrator(this)

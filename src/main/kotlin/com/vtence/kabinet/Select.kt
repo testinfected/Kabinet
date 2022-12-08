@@ -48,10 +48,12 @@ class Select(override val set: FieldSet) : Query<Select>() {
         return executor.execute(statement.prepare { hydrate(it.executeQuery()) })
     }
 
+    private val fieldsIndex = set.fields.index()
+
     private fun <T> read(rs: ResultSet, items: Hydrator<T>): List<T> {
         val result = mutableListOf<T>()
         while (rs.next()) {
-            val row = ResultRow.readFrom(rs, set.fields)
+            val row = ResultRow.readFrom(rs, fieldsIndex)
             result += row[items]
         }
         return result.toList()
