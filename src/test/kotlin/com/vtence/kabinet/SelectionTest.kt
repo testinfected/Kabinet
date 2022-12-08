@@ -565,7 +565,7 @@ class SelectionTest {
         persisted(frenchie)
         persisted(pug)
 
-        val dogs = Products.selectAll().alias("dogs")
+        val dogs = Select.from(Products).alias("dogs")
 
         val results =
             Select
@@ -591,7 +591,7 @@ class SelectionTest {
         persisted(Item(productId = persisted(boxer), number = "543261", price = BigDecimal("1199.00")))
         persisted(Item(productId = persisted(lab), number = "917541", price = BigDecimal("799.00")))
 
-        val dogs = Items.slice(Items.productId, Items.price).selectAll().alias("dogs")
+        val dogs = Select.from(Items.slice(Items.productId, Items.price)).alias("dogs")
 
         val records =
             Products
@@ -607,6 +607,50 @@ class SelectionTest {
             "SELECT products.id, products.number, products.name, products.description " +
                     "FROM products INNER JOIN (SELECT items.product_id, items.price FROM items) AS dogs ON products.id = dogs.product_id " +
                     "WHERE dogs.price > 1000"
+        )
+    }
+
+    @Test
+    fun `using column aliases in sub queries`() {
+        persisted(frenchie)
+        persisted(pug)
+
+        val breed = Products.name.alias("breed")
+        val dogs = Select.from(Products.slice(breed)).alias("dogs")
+
+        val breeds =
+            Select
+                .from(dogs.slice(dogs[breed]))
+                .list(recorder) {
+                    it[dogs[breed]]
+                }
+
+        assertThat(breeds, equalTo(listOf(frenchie.name, pug.name)))
+
+        recorder.assertSql(
+            "SELECT dogs.breed FROM (SELECT products.name AS breed FROM products) AS dogs"
+        )
+    }
+
+    @Test
+    fun `using expression aliases of in sub queries`() {
+        persisted(frenchie)
+        persisted(pug)
+
+        val count = intLiteral("count(*)")
+        val dogs = Select.from(Products.slice(count.alias("total"))).alias("dogs")
+
+        val total =
+            Select
+                .from(dogs.slice(dogs[count]))
+                .list(recorder) {
+                    it[dogs[count]]
+                }.sum()
+
+        assertThat(total, equalTo(2))
+
+        recorder.assertSql(
+            "SELECT dogs.total FROM (SELECT count(*) AS total FROM products) AS dogs"
         )
     }
 }

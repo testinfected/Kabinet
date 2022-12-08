@@ -41,8 +41,16 @@ class QueryAliasTest {
     fun `retrieves aliased column from original column`() {
         val alias = Select.from(Products.slice(Products.name)).alias("things")
 
-        val productName = alias[Products.name]
-        assertThat("column name", productName.name, equalTo(Products.name.name))
-        assertThat("aliased table name", productName.table.tableName, equalTo("things"))
+        assertThat("columns", listOf(alias[Products.name]), equalTo(alias.columns))
+        assertThat("sql", alias[Products.name].toSql(), equalTo("things.name"))
+    }
+
+    @Test
+    fun `retrieves aliased fields from original column`() {
+        val breed = Products.name.alias("breed")
+        val alias = Select.from(Products.slice(breed)).alias("dogs")
+
+        assertThat("columns", listOf(alias[breed]), equalTo(alias.fields))
+        assertThat("sql", alias[breed].toSql(), equalTo("dogs.breed"))
     }
 }

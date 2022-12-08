@@ -16,9 +16,7 @@ class Literal<T>(private val expression: String, override val type: ColumnType<T
         return true
     }
 
-    override fun hashCode(): Int {
-        return expression.hashCode()
-    }
+    override fun hashCode(): Int = 31 * expression.hashCode() + type.hashCode()
 
     override fun toString(): String = expression
 }
