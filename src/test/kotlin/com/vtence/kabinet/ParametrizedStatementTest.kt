@@ -63,4 +63,25 @@ class ParametrizedStatementTest {
             equalTo("SELECT * FROM vegetables WHERE color_gradient = 'linear' AND color = 'green' ::COLOR")
         )
     }
+
+    @Test
+    fun `correctly figures out parameters positions in statement`() {
+        val statement = ParameterizedStatement(
+            "INSERT INTO table VALUES(:ffffff, :bb, :hhhhhhhh, :eeeee, :ccc, :dddd, :ggggggg, :a)"
+        )
+
+        statement["a"] = "a"
+        statement["bb"] = "b"
+        statement["ccc"] = "c"
+        statement["dddd"] = "d"
+        statement["eeeee"] = "e"
+        statement["ffffff"] = "f"
+        statement["ggggggg"] = "g"
+        statement["hhhhhhhh"] = "h"
+
+        assertThat(
+            "sql", statement.toSql(),
+            equalTo("INSERT INTO table VALUES('f', 'b', 'h', 'e', 'c', 'd', 'g', 'a')")
+        )
+    }
 }

@@ -18,16 +18,15 @@ class ParameterizedStatement(private val sql: String) :  SqlStatement, Preparabl
     }
 
     private fun prepareSql(): Pair<String, List<Any?>> {
-        val args = mutableMapOf<Int, String>()
+        val names = data.keys.sortedByDescending { it.length }
 
-        val statement = data.keys
-            .sortedByDescending { it }
-            .fold(sql) { sql, name ->
-                name.toRegex().replace(sql) {
-                    args[it.range.first] = name
-                    "?"
-                }
-            }
+        val args = names.mapNotNull { name ->
+            name.toRegex().find(sql)?.let { it.range.first to name}
+        }.toMap()
+
+        val statement = names.fold(sql) { sql, name ->
+            sql.replace(name.toRegex()) { "?" }
+        }
 
         val parameters = args.toSortedMap().values.map { data[it] }
         return statement to parameters
